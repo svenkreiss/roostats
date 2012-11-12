@@ -26,7 +26,7 @@ parser.add_option("-d", "--dataName", help="data name", type="string", dest="dat
 parser.add_option("-n", "--nToys", help="number of toys", type="int", dest="nToys", default=1)
 parser.add_option(      "--overwritePOI", help="Force to take comma separated list of parameters with value for poi. Example: \"mu=1,mH=125\" will make these two the poi.", dest="overwritePOI", default=False )
 parser.add_option(      "--overwriteRange", help="Overwrite range. Example: \"mu=[-5:10],mH=[120:130]\".", dest="overwriteRange", default=False )
-parser.add_option(      "--proof", help="enable parallel proof-lite processing", dest="proof", default=False, action="store_true" )
+parser.add_option(      "--proof", help="enable parallel proof processing: use \"\" for local proof-lite", dest="proof", default=None )
 
 parser.add_option("-o", "--output", dest="output", type="string", default="standard_frequentist_toys.root")
 parser.add_option("-q", "--quiet", dest="verbose", action="store_false", default=True, 
@@ -128,7 +128,7 @@ def main():
    #    // We can use PROOF to speed things along in parallel
    #    // ProofConfig pc(*w, 2, "user@yourfavoriteproofcluster", false);
    if options.proof:
-      pc = ROOT.RooStats.ProofConfig(w, 2, "", False)
+      pc = ROOT.RooStats.ProofConfig(w, 2, options.proof, False)
       toymcs.SetProofConfig(pc)    # enable proof
 
 
