@@ -27,6 +27,9 @@ parser.add_option("-n", "--nToys", help="number of toys", type="int", dest="nToy
 parser.add_option(      "--overwritePOI", help="Force to take comma separated list of parameters with value for poi. Example: \"mu=1,mH=125\" will make these two the poi.", dest="overwritePOI", default=False )
 parser.add_option(      "--overwriteRange", help="Overwrite range. Example: \"mu=[-5:10],mH=[120:130]\".", dest="overwriteRange", default=False )
 parser.add_option(      "--proof", help="enable parallel proof processing: use \"\" for local proof-lite", dest="proof", default=None )
+parser.add_option(      "--detailedOutput", help="enable detailed output", dest="detailedOutput", default=False, action="store_true" )
+parser.add_option(      "--addSimpleLikelihoodRatioTestStat", help="add SLRTS with defined POIs for the alt hypothesis. Example: \"mu=1,mH=126\"", dest="addSimpleLikelihoodRatioTestStat", default=False )
+
 
 parser.add_option("-o", "--output", dest="output", type="string", default="standard_frequentist_toys.root")
 parser.add_option("-q", "--quiet", dest="verbose", action="store_false", default=True, 
@@ -105,12 +108,35 @@ def main():
    # ----------------------------------------------------
    # Configure a ProfileLikelihoodTestStat to use with ToyMCSampler
    plts = ROOT.RooStats.ProfileLikelihoodTestStat( mc.GetPdf() )
-   #plts->SetOneSidedDiscovery(true);
+   #plts.SetOneSidedDiscovery( True )
    plts.SetVarName( "q_{"  +  ",".join([poiL.at(p).GetName()+"="+str(poiL.at(p).getVal()) for p in range( poiL.getSize() )])  +  "}/2" )
+   if options.detailedOutput: plts.EnableDetailedOutput( True )
+   
+   slrts = None
+   if options.addSimpleLikelihoodRatioTestStat:
+      
+      # prepare mcAlt first
+      mcAlt = mc.Clone( "ModelConfigAlt" )
+      print( "" )
+      print( "=== Creating mcAlt ===" )
+      pvs = options.addSimpleLikelihoodRatioTestStat.split(",")
+      for pv in pvs:
+         name,value = pv.split("=")
+         print( "Setting "+name+"="+value+"." )
+         w.var( name ).setVal( float(value) )
+      mcAlt.SetSnapshot( mcAlt.GetParametersOfInterest() )
+      mcAlt.Print()
+   
+      slrts = ROOT.RooStats.SimpleLikelihoodRatioTestStat( mc.GetPdf(), mc.GetPdf() )
+      slrts.SetNullParameters( mc.GetSnapshot() )
+      slrts.SetAltParameters( mcAlt.GetSnapshot() )
+      if options.detailedOutput: slrts.EnableDetailedOutput( True )
+      
    
    # ----------------------------------------------------
    # configure the ToyMCSampler
    toymcs = ROOT.RooStats.ToyMCSampler(plts, 50)
+   if slrts: toymcs.AddTestStatistic( slrts )
 
    #    // Since this tool needs to throw toy MC the PDF needs to be
    #    // extended or the tool needs to know how many entries in a dataset
