@@ -257,7 +257,7 @@ Int_t RooBSpline::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVar
 
 
 //_____________________________________________________________________________
-Double_t RooBSpline::analyticalIntegralWN(Int_t code, const RooArgSet* normSet,const char* /*rangeName*/) const 
+Double_t RooBSpline::analyticalIntegralWN(Int_t code, const RooArgSet* normSet,const char* rangeName) const 
 {
   //cout << "In RooBSpline::analyticalIntegralWN" << endl;
   double integral = 0;
@@ -278,6 +278,26 @@ Double_t RooBSpline::analyticalIntegralWN(Int_t code, const RooArgSet* normSet,c
 //     }
 // 
 //     obs->setBin(initValue);
+
+
+
+      // From RooAddition:
+      // check if we already have integrals for this combination of factors
+      Int_t sterileIndex(-1);
+      CacheElem* cache = (CacheElem*) _cacheMgr.getObj(normSet,normSet,&sterileIndex,RooNameReg::ptr(rangeName));
+      if (cache==0) {
+         // we don't, so we make it right here....
+         cache = new CacheElem;         
+         for (int i=0;i<_m-_n-1;i++) {
+            RooAbsReal* point = (RooAbsReal*)_controlPoints.at(i);
+            cache->_I.addOwned( *point->createIntegral(_vars,*normSet) );
+         }
+      }
+
+
+
+
+
      RooBSplineBases* bases = (RooBSplineBases*)&_bases.arg();
      bases->getVal(); // build the basis polynomials
      bool useWeight = _weights.getSize();
@@ -291,15 +311,17 @@ Double_t RooBSpline::analyticalIntegralWN(Int_t code, const RooArgSet* normSet,c
        {
          int p=i;
          //if (even && i > 0) p=i-1;
-         RooAbsReal* point = (RooAbsReal*)_controlPoints.at(p);
+         //RooAbsReal* point = (RooAbsReal*)_controlPoints.at(p);
          //cout << "name=" << GetName() << ", point addy=" << point << endl;
          double weight = 1.0;
          if (useWeight)
          {
-      RooAbsReal* weightVar = (RooAbsReal*)_weights.at(p);
-      weight = weightVar->getVal();
+           RooAbsReal* weightVar = (RooAbsReal*)_weights.at(p);
+           weight = weightVar->getVal();
          }
-         RooAbsReal* intReal = point->createIntegral(_vars,*normSet);
+
+
+         RooAbsReal* intReal = (RooAbsReal*)cache->_I.at(p);   //point->createIntegral(_vars,*normSet);
          S += basis * intReal->getVal() * weight;
          //cout << "adding "<<intReal->getVal()<<" to integral" << endl;
          delete intReal;
@@ -353,4 +375,24 @@ Double_t RooBSpline::analyticalIntegralWN(Int_t code, const RooArgSet* normSet,c
 
 //   return pen;
 // }
+
+
+
+
+
+
+//_____________________________________________________________________________
+RooArgList RooBSpline::CacheElem::containedArgs(Action)
+{
+  // Return list of all RooAbsArgs in cache element
+  RooArgList ret(_I) ;
+  return ret ;
+}
+
+RooBSpline::CacheElem::~CacheElem()
+{
+  // Destructor
+}
+
+
 
