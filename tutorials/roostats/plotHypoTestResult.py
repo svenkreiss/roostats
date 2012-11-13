@@ -4,16 +4,8 @@ __author__ = "Sven Kreiss <sk@svenkreiss.com>"
 __version__ = "0.1"
 
 
-import ROOT
-import os,re,optparse
 
-import AtlasStyle
-import AtlasUtil
-
-ROOT.gROOT.SetBatch( True )
-ROOT.gStyle.SetPalette(1)
-
-
+import os,re,glob,optparse
 
 
 parser = optparse.OptionParser(usage="%prog", version="%prog 0.1")
@@ -33,16 +25,33 @@ options, args = parser.parse_args()
 
 
 
+import ROOT
+import AtlasStyle
+import AtlasUtil
+
+ROOT.gROOT.SetBatch( True )
+ROOT.gStyle.SetPalette(1)
+
+
+
 
 class HtrPlotMaker:
-   def __init__( self, filename ):
-      f = ROOT.TFile.Open( filename )
-      self.ws = f.Get( options.workspace )
-      f.Close()
+   def __init__( self, filename, wName, htrName ):
+      files = glob.glob( filename )
+      self.htr = None
+      for fName in files:
+         print( "Opening "+fName )
+         f = ROOT.TFile.Open( fName )
+         w = f.Get( wName )
+         if self.htr: self.htr.Append( w.obj(htrName) )
+         else:
+            self.htr = ROOT.RooStats.HypoTestResult( w.obj(htrName) )
+            self.htr.SetName( "HypoTestResult" )
+         f.Close()
       
-   def drawHtr( self, htrName ):
-      htr = self.ws.obj( htrName )
-      print( "drawing HypoTestResult %s" % htrName )
+   def drawHtr( self ):
+      htr = self.htr #self.ws.obj( htrName )
+      #print( "drawing HypoTestResult %s" % htrName )
       htr.Print()
       nullWeights = htr.GetNullDistribution().GetSampleWeights()
       
@@ -245,5 +254,5 @@ class HtrPlotMaker:
       
 
 if __name__ == "__main__":
-   p = HtrPlotMaker( options.input )
-   p.drawHtr( options.hypoTestResult )
+   p = HtrPlotMaker( options.input, options.workspace, options.hypoTestResult )
+   p.drawHtr()
