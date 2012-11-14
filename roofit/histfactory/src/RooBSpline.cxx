@@ -237,7 +237,7 @@ Bool_t RooBSpline::setBinIntegrator(RooArgSet& allVars)
 
 //_____________________________________________________________________________
 Int_t RooBSpline::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, 
-					  const RooArgSet* /*normSet*/, const char* rangeName) const 
+					  const RooArgSet* normSet, const char* rangeName) const 
 {
 //   cout << "In RooBSpline["<<GetName()<<"]::getAnalyticalIntegralWN" << endl;
 //   cout << "allVars:" << endl;
@@ -259,6 +259,7 @@ Int_t RooBSpline::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVar
 
       // we always do things ourselves -- actually, always delegate further down the line ;-)
       analVars.add(allVars);
+      if( normSet ) analVars.add(*normSet);
       
       // check if we already have integrals for this combination of factors
       Int_t sterileIndex(-1);
@@ -332,6 +333,7 @@ Double_t RooBSpline::analyticalIntegralWN(Int_t code, const RooArgSet* normSet,c
      CacheElem *cache = (CacheElem*) _cacheMgr.getObjByIndex(code-2);
      if (cache==0) {
        // cache got sterilized, trigger repopulation of this slot, then try again...
+       //cout << "Cache got sterilized" << endl;
        std::auto_ptr<RooArgSet> vars( getParameters(RooArgSet()) );
        std::auto_ptr<RooArgSet> iset(  _cacheMgr.nameSet2ByIndex(code-2)->select(*vars) );
        RooArgSet dummy;
@@ -358,7 +360,7 @@ Double_t RooBSpline::analyticalIntegralWN(Int_t code, const RooArgSet* normSet,c
          int p=i;
          //if (even && i > 0) p=i-1;
          //RooAbsReal* point = (RooAbsReal*)_controlPoints.at(p);
-         //cout << "name=" << GetName() << ", point addy=" << point << endl;
+         //cout << "name=" << GetName() << endl;
          double weight = 1.0;
          if (useWeight)
          {
