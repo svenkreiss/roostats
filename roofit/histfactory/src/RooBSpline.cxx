@@ -22,6 +22,7 @@ END_HTML
 #include "Riostream.h"
 #include "Riostream.h"
 #include <math.h>
+#include <memory>
 #include "TMath.h"
 
 #include "RooAbsReal.h"
@@ -236,7 +237,7 @@ Bool_t RooBSpline::setBinIntegrator(RooArgSet& allVars)
 
 //_____________________________________________________________________________
 Int_t RooBSpline::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, 
-					  const RooArgSet* /*normSet*/, const char* /*rangeName*/) const 
+					  const RooArgSet* /*normSet*/, const char* rangeName) const 
 {
 //   cout << "In RooBSpline["<<GetName()<<"]::getAnalyticalIntegralWN" << endl;
 //   cout << "allVars:" << endl;
@@ -249,8 +250,31 @@ Int_t RooBSpline::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVar
   
   if (_forceNumInt) return 0 ;
 
-  if (_vars.getSize()==0) return 2;
-  if (matchArgs(allVars, analVars, *_vars.first())) return 1;
+  if (_vars.getSize()==0) return 1;
+  
+  if (matchArgs(allVars, analVars, *_vars.first())) {
+
+      // From RooAddition:
+      // check if we already have integrals for this combination of factors
+
+      // we always do things ourselves -- actually, always delegate further down the line ;-)
+      analVars.add(allVars);
+      
+      // check if we already have integrals for this combination of factors
+      Int_t sterileIndex(-1);
+      CacheElem* cache = (CacheElem*) _cacheMgr.getObj(&analVars,&analVars,&sterileIndex,RooNameReg::ptr(rangeName));
+      if (cache==0) {
+         // we don't, so we make it right here....
+         cache = new CacheElem;         
+         for (int i=0;i<_m-_n-1;i++) {
+            RooAbsReal* point = (RooAbsReal*)_controlPoints.at(i);
+            cache->_I.addOwned( *point->createIntegral(analVars,rangeName) );
+         }
+      }
+
+      Int_t code = _cacheMgr.setObj(&analVars,&analVars,(RooAbsCacheElement*)cache,RooNameReg::ptr(rangeName));
+      return 2+code;
+  }
 
   return 0;
 }
@@ -261,11 +285,11 @@ Double_t RooBSpline::analyticalIntegralWN(Int_t code, const RooArgSet* normSet,c
 {
   //cout << "In RooBSpline::analyticalIntegralWN" << endl;
   double integral = 0;
-  if (code == 2)
+  if (code == 1)
   {
     return getVal();
   }
-  else if (code == 1)
+  else if (code >= 2)
   {
 //     RooRealVar* obs = (RooRealVar*)_vars.first();
 //     int nrBins = obs->getBins();
@@ -281,20 +305,42 @@ Double_t RooBSpline::analyticalIntegralWN(Int_t code, const RooArgSet* normSet,c
 
 
 
-      // From RooAddition:
-      // check if we already have integrals for this combination of factors
-      Int_t sterileIndex(-1);
-      CacheElem* cache = (CacheElem*) _cacheMgr.getObj(normSet,normSet,&sterileIndex,RooNameReg::ptr(rangeName));
-      if (cache==0) {
-         // we don't, so we make it right here....
-         cache = new CacheElem;         
-         for (int i=0;i<_m-_n-1;i++) {
-            RooAbsReal* point = (RooAbsReal*)_controlPoints.at(i);
-            cache->_I.addOwned( *point->createIntegral(_vars,*normSet) );
-         }
-      }
+// 
+//       // From RooAddition:
+//       // check if we already have integrals for this combination of factors
+// 
+//       // we always do things ourselves -- actually, always delegate further down the line ;-)
+//       RooArgSet analVars( _vars );
+//       analVars.add(*normSet);
+// 
+//       Int_t sterileIndex(-1);
+//       CacheElem* cache = (CacheElem*) _cacheMgr.getObj(&analVars,&analVars,&sterileIndex,RooNameReg::ptr(rangeName));
+//       if (cache==0) {
+//          // we don't, so we make it right here....
+//          cache = new CacheElem;         
+//          for (int i=0;i<_m-_n-1;i++) {
+//             RooAbsReal* point = (RooAbsReal*)_controlPoints.at(i);
+//             cache->_I.addOwned( *point->createIntegral(_vars,*normSet) );
+//          }
+//       }
+// 
 
 
+     // Calculate integral internally from appropriate integral cache
+   
+     // note: rangeName implicit encoded in code: see _cacheMgr.setObj in getPartIntList...
+     CacheElem *cache = (CacheElem*) _cacheMgr.getObjByIndex(code-2);
+     if (cache==0) {
+       // cache got sterilized, trigger repopulation of this slot, then try again...
+       std::auto_ptr<RooArgSet> vars( getParameters(RooArgSet()) );
+       std::auto_ptr<RooArgSet> iset(  _cacheMgr.nameSet2ByIndex(code-2)->select(*vars) );
+       RooArgSet dummy;
+       Int_t code2 = getAnalyticalIntegral(*iset,dummy,rangeName);
+       assert(code==code2); // must have revived the right (sterilized) slot...
+       return analyticalIntegral(code2,rangeName);
+     }
+     assert(cache!=0);
+   
 
 
 
@@ -324,7 +370,7 @@ Double_t RooBSpline::analyticalIntegralWN(Int_t code, const RooArgSet* normSet,c
          RooAbsReal* intReal = (RooAbsReal*)cache->_I.at(p);   //point->createIntegral(_vars,*normSet);
          S += basis * intReal->getVal() * weight;
          //cout << "adding "<<intReal->getVal()<<" to integral" << endl;
-         delete intReal;
+         //delete intReal;
        }
      }
      
