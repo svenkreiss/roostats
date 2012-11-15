@@ -337,7 +337,7 @@ Double_t RooBSplineBases::evaluate() const
 	if (_t_ary[i+n+1] - _t_ary[i+1] > 0.0000000000001) term2 = _bin[n-1][i+1] / (_t_ary[i+n+1] - _t_ary[i+1]);
 
 	//cout << "Setting bin" << endl;
-	_bin[n][i] = (t - _t_ary[i]) * term1 + (_t_ary[i+n+1] - t) * term2;   // _t_ary[i] ---> _t_ary[i+n] ???
+	_bin[n][i] = (t - _t_ary[i]) * term1 + (_t_ary[i+n+1] - t) * term2;
       }
       if (_bin[n][i] < 0.000000000001) _bin[n][i] = 0;
     }
