@@ -57,7 +57,8 @@ RooBSpline::RooBSpline(const char* name, const char* title,
   _n(bases.getOrder()),
   _weights("weights","List of weights",this),
   _bases("bases","Basis polynomials",this,bases),
-  _vars("observables","List of observables",this)
+  _vars("observables","List of observables",this),
+  _cacheMgr(this,10)
 {
   //cout << "in Ctor" << endl;
   //cout << "t = " << t << endl;
@@ -110,7 +111,8 @@ RooBSpline::RooBSpline(const char* name, const char* title,
 //_____________________________________________________________________________
 RooBSpline::RooBSpline(const char* name, const char* title) :
   RooAbsReal(name, title),
-  _controlPoints("controlPoints","List of coefficients",this)
+  _controlPoints("controlPoints","List of coefficients",this),
+  _cacheMgr(this,10)
 {
   // Constructor of flat polynomial function
 
@@ -126,7 +128,8 @@ RooBSpline::RooBSpline(const RooBSpline& other, const char* name) :
   _n(other._n),
   _weights("weights",this,other._weights),
   _bases("bases",this,other._bases),
-  _vars("observables",this,other._vars)
+  _vars("observables",this,other._vars),
+  _cacheMgr(this,10)
 {
   // Copy constructor
   
@@ -282,7 +285,7 @@ Int_t RooBSpline::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVar
 
 
 //_____________________________________________________________________________
-Double_t RooBSpline::analyticalIntegralWN(Int_t code, const RooArgSet* normSet,const char* rangeName) const 
+Double_t RooBSpline::analyticalIntegralWN(Int_t code, const RooArgSet* /*normSet*/,const char* rangeName) const 
 {
   //cout << "In RooBSpline::analyticalIntegralWN" << endl;
   double integral = 0;
