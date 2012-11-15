@@ -19,6 +19,7 @@ parser.add_option(      "--ymax", help="p value max y range", type="float", dest
 parser.add_option(      "--xmin", help="xmin", type="float", dest="xmin", default=-1.5)
 parser.add_option(      "--xmax", help="xmax", type="float", dest="xmax", default=13.5)
 parser.add_option(      "--bins", help="bins for sampling distribution plots", type="int", dest="bins", default=60)
+parser.add_option(      "--dof", help="Specify degrees-of-freedom for asym distributions.", type="int", dest="dof", default=1)
 parser.add_option("-q", "--quiet", action="store_false", dest="verbose", default=True,
                   help="don't print status messages to stdout")
 options, args = parser.parse_args()
@@ -101,7 +102,7 @@ class HtrPlotMaker:
             hNull.SetLineColor( i+3 )
             plot.AddTH1( hNull, "HIST SAME" )
       
-      nPOI = 1
+      nPOI = options.dof
       f = ROOT.TF1("f", "1*ROOT::Math::chisquared_pdf(2*x,%d,0)" % nPOI,0,20)
       f.SetLineColor( ROOT.kBlack )
       f.SetLineStyle( 7 )
