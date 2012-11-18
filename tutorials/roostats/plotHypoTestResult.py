@@ -20,6 +20,7 @@ parser.add_option(      "--xmin", help="xmin", type="float", dest="xmin", defaul
 parser.add_option(      "--xmax", help="xmax", type="float", dest="xmax", default=13.5)
 parser.add_option(      "--bins", help="bins for sampling distribution plots", type="int", dest="bins", default=60)
 parser.add_option(      "--dof", help="Specify degrees-of-freedom for asym distributions.", type="int", dest="dof", default=1)
+parser.add_option(      "--twoSided", help="If the test is two sided. Default is one sided.", dest="twoSided", default=False, action="store_true")
 parser.add_option("-q", "--quiet", action="store_false", dest="verbose", default=True,
                   help="don't print status messages to stdout")
 options, args = parser.parse_args()
@@ -103,14 +104,16 @@ class HtrPlotMaker:
             plot.AddTH1( hNull, "HIST SAME" )
       
       nPOI = options.dof
-      f = ROOT.TF1("f", "1*ROOT::Math::chisquared_pdf(2*x,%d,0)" % nPOI,0,20)
-      f.SetLineColor( ROOT.kBlack )
-      f.SetLineStyle( 7 )
-      plot.AddTF1( f, "#chi^{2}(2x,%d): \"half-chisquared\"" % nPOI )
-      f2 = ROOT.TF1("f2", "2*ROOT::Math::chisquared_pdf(2*x,%d,0)" % nPOI,0,20)
-      f2.SetLineColor( ROOT.kBlack )
-      f2.SetLineStyle( 2 )
-      plot.AddTF1( f2, "2#chi^{2}(2x,%d): \"chisquared\"" % nPOI )
+      if not options.twoSided:
+         f = ROOT.TF1("f", "1*ROOT::Math::chisquared_pdf(2*x,%d,0)" % nPOI,0,20)
+         f.SetLineColor( ROOT.kBlack )
+         f.SetLineStyle( 7 )
+         plot.AddTF1( f, "#chi^{2}(2x,%d): \"half-chisquared\"" % nPOI )
+      else:
+         f2 = ROOT.TF1("f2", "2*ROOT::Math::chisquared_pdf(2*x,%d,0)" % nPOI,0,20)
+         f2.SetLineColor( ROOT.kBlack )
+         f2.SetLineStyle( 2 )
+         plot.AddTF1( f2, "2#chi^{2}(2x,%d): \"chisquared\"" % nPOI )
 
       plot.Draw()
       c.SaveAs( "%s(" % options.output )
@@ -122,8 +125,8 @@ class HtrPlotMaker:
       plotClean.SetAxisTitle( "q_{0}/2" )
       #plotClean.SetLineColor( ROOT.kGray )
       #plotClean.SetLineWidth( 5 )
-      plotClean.AddTF1( f, "#chi^{2}(2x,%d): \"half-chisquared\"" % nPOI )
-      plotClean.AddTF1( f2, "2#chi^{2}(2x,%d): \"chisquared\"" % nPOI )
+      if not options.twoSided: plotClean.AddTF1( f, "#chi^{2}(2x,%d): \"half-chisquared\"" % nPOI )
+      else:                    plotClean.AddTF1( f2, "2#chi^{2}(2x,%d): \"chisquared\"" % nPOI )
       plotClean.Draw()
       c.SaveAs( "%s" % options.output )
 
