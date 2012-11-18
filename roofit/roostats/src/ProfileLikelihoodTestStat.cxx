@@ -244,7 +244,7 @@ Double_t RooStats::ProfileLikelihoodTestStat::EvaluateProfileLikelihood(int type
        }
 
 
-       if( !fSigned  &&  pll < 0.0 ) {
+       if( !fSigned  &&  pll < -1e-3 ) {
           // !!!!!!!! THIS IS POTENTIALLY VERY DANGEREOUS TODO
           cout << "WARNING: ProfileLikelihood is negative. Re-evaluating." << endl;
           pll = EvaluateProfileLikelihood(type, data, paramsOfInterest);
