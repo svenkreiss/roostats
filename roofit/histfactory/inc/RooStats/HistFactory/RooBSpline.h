@@ -22,6 +22,7 @@
 #include "RooObjCacheManager.h"
 #include "RooNumIntConfig.h"
 
+
 #include <sstream>
 
 
@@ -75,9 +76,20 @@ namespace HistFactory{
     RooSetProxy _vars;
 
 
+    // Cache the integrals   
+    class CacheElem : public RooAbsCacheElement {
+    public:
+      virtual ~CacheElem();
+      // Payload
+      RooArgList _I ;
+      virtual RooArgList containedArgs(Action) ;
+    };
+    mutable RooObjCacheManager _cacheMgr ; // The cache manager
+
+
     Double_t evaluate() const;
 
-    ClassDef(RooStats::HistFactory::RooBSpline,1) // Uniform B-Spline
+    ClassDef(RooStats::HistFactory::RooBSpline,2) // Uniform B-Spline
   };
 }
 }
