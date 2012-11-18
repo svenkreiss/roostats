@@ -104,37 +104,15 @@ Double_t RooStats::ProfileLikelihoodTestStat::EvaluateProfileLikelihood(int type
        double createTime = tsw.CpuTime();
        tsw.Start();
 
-       // get the denominator
-       double uncondML = 0;
-       double fit_favored_mu = 0;
-       int statusD = 0;
+
+
+
+
+
        RooArgSet * detOutput = 0;
-       if (type != 2) {
-          // minimize and count eval errors
-          fNll->clearEvalErrorLog();
-	  RooFitResult* result = GetMinNLL();
-          if (result) {
-             uncondML = result->minNll();
-             statusD = result->status();
 
-             // get best fit value for one-sided interval 
-             if (firstPOI) fit_favored_mu = attachedSet->getRealValue(firstPOI->GetName()) ;
 
-             // save this snapshot
-             if( fDetailedOutputEnabled ) {
-                detOutput = DetailedOutputAggregator::GetAsArgSet(result, "fitUncond_", fDetailedOutputWithErrorsAndPulls);
-                fDetailedOutput->addOwned(*detOutput);
-                delete detOutput;
-             }
-             delete result;
-          }
-          else { 
-             return TMath::SignalingNaN();   // this should not really happen
-          }
-       }
-       tsw.Stop();
-       double fitTime1  = tsw.CpuTime();
-          
+
        //double ret = 0; 
        int statusN = 0;
        tsw.Start();
@@ -144,12 +122,12 @@ Double_t RooStats::ProfileLikelihoodTestStat::EvaluateProfileLikelihood(int type
        bool doConditionalFit = (type != 1); 
 
        // skip the conditional ML (the numerator) only when fit value is smaller than test value
-       if (!fSigned && type==0 &&
-           ((fLimitType==oneSided          && fit_favored_mu >= initial_mu_value) ||
-            (fLimitType==oneSidedDiscovery && fit_favored_mu <= initial_mu_value))) {
-          doConditionalFit = false; 
-          condML = uncondML;
-       }
+//        if (!fSigned && type==0 &&
+//            ((fLimitType==oneSided          && fit_favored_mu >= initial_mu_value) ||
+//             (fLimitType==oneSidedDiscovery && fit_favored_mu <= initial_mu_value))) {
+//           doConditionalFit = false; 
+//           condML = uncondML;
+//        }
 
        if (doConditionalFit) {  
 
@@ -199,6 +177,58 @@ Double_t RooStats::ProfileLikelihoodTestStat::EvaluateProfileLikelihood(int type
        tsw.Stop();
        double fitTime2 = tsw.CpuTime();
 
+
+
+
+
+
+
+
+
+
+
+       // get the denominator
+       double uncondML = 0;
+       double fit_favored_mu = 0;
+       int statusD = 0;
+       if (type != 2) {
+          // minimize and count eval errors
+          fNll->clearEvalErrorLog();
+	  RooFitResult* result = GetMinNLL();
+          if (result) {
+             uncondML = result->minNll();
+             statusD = result->status();
+
+             // get best fit value for one-sided interval 
+             if (firstPOI) fit_favored_mu = attachedSet->getRealValue(firstPOI->GetName()) ;
+
+             // save this snapshot
+             if( fDetailedOutputEnabled ) {
+                detOutput = DetailedOutputAggregator::GetAsArgSet(result, "fitUncond_", fDetailedOutputWithErrorsAndPulls);
+                fDetailedOutput->addOwned(*detOutput);
+                delete detOutput;
+             }
+             delete result;
+          }
+          else { 
+             return TMath::SignalingNaN();   // this should not really happen
+          }
+       }
+       tsw.Stop();
+       double fitTime1  = tsw.CpuTime();
+          
+
+
+
+
+
+
+       
+       
+       
+       
+       
+
        double pll;
        if      (type == 1) pll = uncondML;
        else if (type == 2) pll = condML;
@@ -244,11 +274,6 @@ Double_t RooStats::ProfileLikelihoodTestStat::EvaluateProfileLikelihood(int type
        }
 
 
-       if( !fSigned  &&  pll < -1e-3 ) {
-          // !!!!!!!! THIS IS POTENTIALLY VERY DANGEREOUS TODO
-          cout << "WARNING: ProfileLikelihood is negative. Re-evaluating." << endl;
-          pll = EvaluateProfileLikelihood(type, data, paramsOfInterest);
-       }
        return pll;
              
      }     
