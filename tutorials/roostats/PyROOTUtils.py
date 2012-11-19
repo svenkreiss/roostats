@@ -1,12 +1,8 @@
 #!/usr/bin/env python
 
-#  Created on: July 2, 2012
-
 __author__ = "Sven Kreiss, Kyle Cranmer"
 __version__ = "0.1"
-
-
-"""
+__doc__ = """
 Module providing some convenience classes for ROOT. This helps making fixed font size
 legends, graphs from Python lists, Bands from lists including outlines of Bands. One
 of the highlights is also putting text on graphs including multi-line support; and
