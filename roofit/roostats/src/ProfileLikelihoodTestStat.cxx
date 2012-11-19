@@ -186,6 +186,8 @@ Double_t RooStats::ProfileLikelihoodTestStat::EvaluateProfileLikelihood(int type
 
 
 
+       //       cout <<" reestablish snapshot"<<endl;
+       *attachedSet = *snap;
 
        // get the denominator
        double uncondML = 0;
