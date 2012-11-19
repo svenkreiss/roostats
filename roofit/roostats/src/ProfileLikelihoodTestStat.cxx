@@ -295,6 +295,11 @@ RooFitResult* RooStats::ProfileLikelihoodTestStat::GetMinNLL() {
    TString algorithm = ROOT::Math::MinimizerOptions::DefaultMinimizerAlgo();
    if (algorithm == "Migrad") algorithm = "Minimize"; // prefer to use Minimize instead of Migrad
    int status;
+
+   // only do for 4l model
+   minim.minimize(minimizer,"Scan");
+
+
    for (int tries = 1, maxtries = 4; tries <= maxtries; ++tries) {
       status = minim.minimize(minimizer,algorithm);
       if (status%1000 == 0) {  // ignore erros from Improve 
