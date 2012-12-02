@@ -297,7 +297,7 @@ RooFitResult* RooStats::ProfileLikelihoodTestStat::GetMinNLL() {
    int status;
 
    // only do for 4l model
-   minim.minimize(minimizer,"Scan");
+   //minim.minimize(minimizer,"Scan");
 
 
    for (int tries = 1, maxtries = 4; tries <= maxtries; ++tries) {
