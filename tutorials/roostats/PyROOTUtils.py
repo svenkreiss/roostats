@@ -82,17 +82,24 @@ class Graph( ROOT.TGraph ):
              x = [x1,x2,...]
              y = [y1,y2,...]
       """
-      if not y:
-         # assume x is of the form: [ (x1,y1), (x2,y2), ... ]
-         # --> split into xy
-         y = [i[1] for i in x]
-         x = [i[0] for i in x]
-   
-      if len(x) != len(y):
-         print( "x and y have to have the same length." )
-         return
 
-      ROOT.TGraph.__init__( self, len(x), array('f',x), array('f',y) )
+      if isinstance( x,ROOT.TObject ):
+         ROOT.TGraph.__init__( self, x )
+      
+      else:
+         if not y:
+            # assume x is of the form: [ (x1,y1), (x2,y2), ... ]
+            # --> split into xy
+            y = [i[1] for i in x]
+            x = [i[0] for i in x]
+      
+         if len(x) != len(y):
+            print( "x and y have to have the same length." )
+            return
+   
+         ROOT.TGraph.__init__( self, len(x), array('f',x), array('f',y) )
+      
+      
       if fillColor:
          self.SetFillColor( fillColor )
       if lineColor:
@@ -106,6 +113,90 @@ class Graph( ROOT.TGraph ):
       r = ( ROOT.Double(), ROOT.Double(), ROOT.Double(), ROOT.Double() )
       self.ComputeRange( r[0], r[1], r[2], r[3] )
       return r
+
+   def table( self, bandLow=None, bandHigh=None, bandDifference=True ):
+      out = ""
+      
+      for i in range( self.GetN() ):
+         out += "%f \t%f" % ( self.GetX()[i], self.GetY()[i] )
+         if bandLow:
+            bL = bandLow.Eval( self.GetX()[i] )
+            if bandDifference: bL -= self.GetY()[i]
+            out += " \t"+str( bL )
+         if bandHigh:
+            bH = bandHigh.Eval( self.GetX()[i] )
+            if bandDifference: bH -= self.GetY()[i]
+            out += " \t"+str( bH )
+         
+         out += "\n"
+         
+      return out
+         
+   def getFirstIntersectionsWithGraph( self, otherGraph, xVar=None, xCenter=None, xRange=None, steps=1000 ):
+      """ xRange must be of the form (min,max) when given """
+      if xVar and not xRange: xRange = (xVar.getMin(), xVar.getMax())
+      if xVar and not xCenter: xCenter = xVar.getVal()
+      
+      intersections = []
+
+      #down
+      higher = self.Eval( xCenter ) > otherGraph.Eval( xCenter )
+      for i in range( steps+1 ):
+         #x = xRange[0]  +   float(i)*( xRange[1]-xRange[0] ) / steps
+         x = xCenter  -   float(i)*( xCenter-xRange[0] ) / steps
+         
+         newHigher = self.Eval( x ) > otherGraph.Eval( x )
+         if higher != newHigher:
+            intersections.append( x )
+            break
+         higher = newHigher         
+      #up
+      higher = self.Eval( xCenter ) > otherGraph.Eval( xCenter )
+      for i in range( steps+1 ):
+         #x = xRange[0]  +   float(i)*( xRange[1]-xRange[0] ) / steps
+         x = xCenter  +   float(i)*( xRange[1]-xCenter ) / steps
+         
+         newHigher = self.Eval( x ) > otherGraph.Eval( x )
+         if higher != newHigher:
+            intersections.append( x )
+            break
+         higher = newHigher
+         
+      return intersections
+      
+   def getFirstIntersectionsWithValue( self, value, xVar=None, xCenter=None, xRange=None, steps=1000 ):
+      """ xRange must be of the form (min,max) when given """
+      if xVar and not xRange: xRange = (xVar.getMin(), xVar.getMax())
+      if xVar and not xCenter: xCenter = xVar.getVal()
+      
+      intersections = []
+
+      #down
+      higher = self.Eval( xCenter ) > value
+      for i in range( steps+1 ):
+         #x = xRange[0]  +   float(i)*( xRange[1]-xRange[0] ) / steps
+         x = xCenter  -   float(i)*( xCenter-xRange[0] ) / steps
+         
+         newHigher = self.Eval( x ) > value
+         if higher != newHigher:
+            intersections.append( x )
+            break
+         higher = newHigher         
+      #up
+      higher = self.Eval( xCenter ) > value
+      for i in range( steps+1 ):
+         #x = xRange[0]  +   float(i)*( xRange[1]-xRange[0] ) / steps
+         x = xCenter  +   float(i)*( xRange[1]-xCenter ) / steps
+         
+         newHigher = self.Eval( x ) > value
+         if higher != newHigher:
+            intersections.append( x )
+            break
+         higher = newHigher
+         
+      return intersections
+      
+
 
 class Band( ROOT.TGraph ):
    def __init__( self, x, yLow, yHigh, style="full", fillColor=None, lineColor=None, lineStyle=None, lineWidth=None, shiftBand=None ):

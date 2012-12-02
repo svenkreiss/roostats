@@ -12,7 +12,9 @@ parser = optparse.OptionParser(usage="%prog", version="%prog 0.1")
 parser.add_option("-i", "--input", help="root file with impsampl", dest="input", default="ToysOutput.root" )
 parser.add_option("-w", "--workspace", help="workspace name", dest="workspace", default="ToysOutput" )
 parser.add_option("-r", "--hypoTestResult", help="hypoTestResult name", dest="hypoTestResult", default="HypoTestCalculator_result" )
-parser.add_option("-o", "--output", help="pdf file with impsampl output", dest="output", default="ToysOutput.pdf" )
+parser.add_option("-o", "--output", help="pdf file with impsampl output", dest="output", default="ToysOutput/" )
+
+parser.add_option(      "--fits", help="an output for minos.py", dest="fits", default="minos.root" )
 
 parser.add_option(      "--ymin", help="p value low y range", type="float", dest="ymin", default=5e-8)
 parser.add_option(      "--ymax", help="p value max y range", type="float", dest="ymax", default=50)
@@ -24,6 +26,10 @@ parser.add_option(      "--twoSided", help="If the test is two sided. Default is
 parser.add_option("-q", "--quiet", action="store_false", dest="verbose", default=True,
                   help="don't print status messages to stdout")
 options, args = parser.parse_args()
+
+
+os.system( "mkdir -p "+options.output )
+os.system( "rm "+options.output+"*.eps" )
 
 
 
@@ -116,7 +122,7 @@ class HtrPlotMaker:
          plot.AddTF1( f2, "2#chi^{2}(2x,%d): \"chisquared\"" % nPOI )
 
       plot.Draw()
-      c.SaveAs( "%s(" % options.output )
+      c.SaveAs( options.output+"overview.eps" )
 
       # same plot, but much cleaner      
       plotClean = ROOT.RooStats.HypoTestPlot( htr, options.bins, options.xmin+1e-3, options.xmax+1e-3 )
@@ -128,7 +134,7 @@ class HtrPlotMaker:
       if not options.twoSided: plotClean.AddTF1( f, "#chi^{2}(2x,%d): \"half-chisquared\"" % nPOI )
       else:                    plotClean.AddTF1( f2, "2#chi^{2}(2x,%d): \"chisquared\"" % nPOI )
       plotClean.Draw()
-      c.SaveAs( "%s" % options.output )
+      c.SaveAs( options.output+"overview_clean.eps" )
 
       
       
@@ -169,7 +175,7 @@ class HtrPlotMaker:
          corrHist.LabelsOption( "v", "x" )
          corrHist.LabelsOption( "h", "y" )
          corrHist.Draw( "COLZ" )
-         cCorr.SaveAs( options.output )
+         cCorr.SaveAs( options.output+"corrWithTS_"+corrVars.at(i).GetName()+".eps" )
       
       
       # first the 2D comparisons of the TS values
@@ -212,7 +218,7 @@ class HtrPlotMaker:
             h.Fill( h.GetBinCenter(1), h.GetBinContent(0) )
             h.Fill( h.GetBinCenter(options.bins), h.GetBinContent(options.bins+1) )
             plot.Draw()
-            c.SaveAs( options.output )
+            c.SaveAs( options.output+"tsDistribution_"+l.at(i).GetName()+".eps" )
 
             # now 2D comparison
             c2D.cd().SetLogz( True )
@@ -230,7 +236,7 @@ class HtrPlotMaker:
                h1.SetBinContent( 1, y, h1.GetBinContent(1,y)+h1.GetBinContent(0,y) )
                h1.SetBinContent( options.bins, y, h1.GetBinContent(options.bins,y)+h1.GetBinContent(options.bins+1,y) )
             h1.Draw( "COLZ" )
-            c2D.SaveAs( options.output )
+            c2D.SaveAs( options.output+"comparison_"+l.at(0).GetName()+"_"+l.at(i).GetName()+".eps" )
 
 
       # now get the parameter distributions         
@@ -247,14 +253,21 @@ class HtrPlotMaker:
             h1.SetMinimum( 0.7 )
             h1.Draw( "HIST" )
             # weird SLRTS
-            h2 = ROOT.TH1F( "oneVar_%s" % l.at(i).GetName(), l.at(i).GetTitle(), 50, lowest, highest )
-            fullResult.fillHistogram( h2, ROOT.RooArgList(l.at(i),"tmpList"), "ModelConfigNull_TS1 < 0.0" )
-            h2.SetLineColor( ROOT.kRed )
-            h2.Draw( "HIST SAME" )
-            c.SaveAs( options.output )
+#             h2 = ROOT.TH1F( "oneVar_%s" % l.at(i).GetName(), l.at(i).GetTitle(), 50, lowest, highest )
+#             fullResult.fillHistogram( h2, ROOT.RooArgList(l.at(i),"tmpList"), "ModelConfigNull_TS1 < 0.0" )
+#             h2.SetLineColor( ROOT.kRed )
+#             h2.Draw( "HIST SAME" )
+            c.SaveAs( options.output+"param_"+l.at(i).GetName()+".eps" )
          
       c.Clear()
-      c.SaveAs( "%s)" % options.output )
+      #c.SaveAs( "%s)" % options.output )
+
+      print( "Merging eps files" )
+      fileList = "`\ls "+options.output+"*.eps`"
+      os.system( "gs -q -dNOPAUSE -dBATCH -sEPSCrop -sDEVICE=pdfwrite -sOutputFile="+options.output+"merged.pdf "+fileList )
+      print( "Creating zip file" )
+      os.system( "rm "+options.output+"merged.zip" )
+      os.system( "zip -r "+options.output+"merged.zip "+fileList )
       
 
 if __name__ == "__main__":
