@@ -101,6 +101,11 @@ class Graph( ROOT.TGraph ):
          self.SetLineStyle( lineStyle )
       if lineWidth:
          self.SetLineWidth( lineWidth )
+         
+   def ComputeRange( self ):
+      r = ( ROOT.Double(), ROOT.Double(), ROOT.Double(), ROOT.Double() )
+      self.ComputeRange( r[0], r[1], r[2], r[3] )
+      return r
 
 class Band( ROOT.TGraph ):
    def __init__( self, x, yLow, yHigh, style="full", fillColor=None, lineColor=None, lineStyle=None, lineWidth=None, shiftBand=None ):
