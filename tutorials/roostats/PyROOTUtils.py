@@ -109,7 +109,7 @@ class Graph( ROOT.TGraph ):
       if lineWidth:
          self.SetLineWidth( lineWidth )
          
-   def ComputeRange( self ):
+   def GetRanges( self ):
       r = ( ROOT.Double(), ROOT.Double(), ROOT.Double(), ROOT.Double() )
       self.ComputeRange( r[0], r[1], r[2], r[3] )
       return r
@@ -137,7 +137,7 @@ class Graph( ROOT.TGraph ):
       if xVar and not xRange: xRange = (xVar.getMin(), xVar.getMax())
       if xVar and not xCenter: xCenter = xVar.getVal()
       
-      intersections = []
+      low,high = (None,None)
 
       #down
       higher = self.Eval( xCenter ) > otherGraph.Eval( xCenter )
@@ -147,9 +147,9 @@ class Graph( ROOT.TGraph ):
          
          newHigher = self.Eval( x ) > otherGraph.Eval( x )
          if higher != newHigher:
-            intersections.append( x )
+            low = x
             break
-         higher = newHigher         
+         higher = newHigher
       #up
       higher = self.Eval( xCenter ) > otherGraph.Eval( xCenter )
       for i in range( steps+1 ):
@@ -158,18 +158,18 @@ class Graph( ROOT.TGraph ):
          
          newHigher = self.Eval( x ) > otherGraph.Eval( x )
          if higher != newHigher:
-            intersections.append( x )
+            high = x
             break
          higher = newHigher
          
-      return intersections
+      return (low,high)
       
    def getFirstIntersectionsWithValue( self, value, xVar=None, xCenter=None, xRange=None, steps=1000 ):
       """ xRange must be of the form (min,max) when given """
       if xVar and not xRange: xRange = (xVar.getMin(), xVar.getMax())
       if xVar and not xCenter: xCenter = xVar.getVal()
       
-      intersections = []
+      low,high = (None,None)
 
       #down
       higher = self.Eval( xCenter ) > value
@@ -179,7 +179,7 @@ class Graph( ROOT.TGraph ):
          
          newHigher = self.Eval( x ) > value
          if higher != newHigher:
-            intersections.append( x )
+            low = x
             break
          higher = newHigher         
       #up
@@ -190,11 +190,11 @@ class Graph( ROOT.TGraph ):
          
          newHigher = self.Eval( x ) > value
          if higher != newHigher:
-            intersections.append( x )
+            high = x
             break
          higher = newHigher
          
-      return intersections
+      return (low,high)
       
 
 
