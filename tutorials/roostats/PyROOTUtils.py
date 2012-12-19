@@ -238,7 +238,14 @@ class Band( ROOT.TGraph ):
       
       
 
-
+def DrawLine( x1,y1,x2,y2, lineWidth=None, lineStyle=None, lineColor=None ):
+   l = ROOT.TLine( x1,y1,x2,y2 )
+   if lineWidth: l.SetLineWidth( lineWidth )
+   if lineStyle: l.SetLineStyle( lineStyle )
+   if lineColor: l.SetLineColor( lineColor )
+   l.Draw()
+   
+   return l
 
 
 def DrawTextOneLine( x, y, text, color = 1, size = 0.04, NDC = True, halign = "left", valign = "bottom", skipLines = 0 ):
