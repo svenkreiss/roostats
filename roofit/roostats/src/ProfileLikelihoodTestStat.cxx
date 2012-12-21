@@ -168,7 +168,9 @@ Double_t RooStats::ProfileLikelihoodTestStat::EvaluateProfileLikelihood(int type
                delete result;
             }
             else { 
-               return TMath::SignalingNaN();   // this should not really happen
+               //return TMath::SignalingNaN();   // this should not really happen
+               condML = fNll->getVal();
+               statusN = 0;
             }
           }
 
@@ -213,7 +215,12 @@ Double_t RooStats::ProfileLikelihoodTestStat::EvaluateProfileLikelihood(int type
              delete result;
           }
           else { 
-             return TMath::SignalingNaN();   // this should not really happen
+             //return TMath::SignalingNaN();   // this should not really happen
+             uncondML = fNll->getVal();
+             statusD = 0;
+
+             // get best fit value for one-sided interval 
+             if (firstPOI) fit_favored_mu = attachedSet->getRealValue(firstPOI->GetName()) ;
           }
        }
        tsw.Stop();
@@ -281,19 +288,22 @@ Double_t RooStats::ProfileLikelihoodTestStat::EvaluateProfileLikelihood(int type
      }     
 
 RooFitResult* RooStats::ProfileLikelihoodTestStat::GetMinNLL() {
-   //find minimum of NLL using RooMinimizer
+   RooStats::Minimize( *fNll );
+   return NULL;
+   
 
+   //find minimum of NLL using RooMinimizer
    RooMinimizer minim(*fNll);
    minim.setStrategy(fStrategy);
    //LM: RooMinimizer.setPrintLevel has +1 offset - so subtruct  here -1 + an extra -1 
    int level = (fPrintLevel == 0) ? -1 : fPrintLevel -2;
    minim.setPrintLevel(level);
-   minim.setEps(fTolerance);
+   //minim.setEps(fTolerance);
    // this cayses a memory leak
-   minim.optimizeConst(2); 
+   minim.optimizeConst(0); 
    TString minimizer = fMinimizer;
    TString algorithm = ROOT::Math::MinimizerOptions::DefaultMinimizerAlgo();
-   if (algorithm == "Migrad") algorithm = "Minimize"; // prefer to use Minimize instead of Migrad
+   //if (algorithm == "Migrad") algorithm = "Minimize"; // prefer to use Minimize instead of Migrad
    int status;
 
    // only do for 4l model
@@ -324,6 +334,7 @@ RooFitResult* RooStats::ProfileLikelihoodTestStat::GetMinNLL() {
    }
 
    //how to get cov quality faster?
-   return minim.save();
+   //return minim.save();
+   return NULL;
    //minim.optimizeConst(false); 
 }

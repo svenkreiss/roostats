@@ -45,10 +45,24 @@ import math
 def main():
    ROOT.RooRandom.randomGenerator().SetSeed( 0 )
 
+
    f = ROOT.TFile.Open( options.fileName )
    w = f.Get( options.wsName )
    mc = w.obj( options.mcName )
    data = w.data( options.dataName )
+   
+   #ROOT.RooAbsReal.defaultIntegratorConfig().method1D().setLabel("RooAdaptiveGaussKronrodIntegrator1D")
+   ROOT.Math.MinimizerOptions.SetDefaultMinimizer("Minuit2")
+   #ROOT.RooMinimizer.SetMaxFunctionCalls(10000)
+   #ROOT.Math.MinimizerOptions.SetDefaultStrategy( 0 )
+
+   mf = ROOT.RooStats.MinFinderScan()
+   #mf.AddScanVar( w.var("mu") )
+   mf.AddScanVar( w.var("mH") )
+   #mf.AddScanVar( w.var("ess") )
+   mf.ScanLimit( 2.0 )
+   mf.OptimizeConst( 0 )
+   ROOT.RooStats.MinFinder.defaultMinFinder = mf
 
    if options.overwriteRange:
       parAndRange = options.overwriteRange.split(",")
@@ -177,7 +191,7 @@ def main():
 
    # plot
    c1 = ROOT.TCanvas()
-   plot = ROOT.RooStats.HypoTestPlot(freqCalcResult, 100, -0.49, 9.51 )
+   plot = ROOT.RooStats.HypoTestPlot(freqCalcResult, 60, -0.49, 2.51 )
    plot.SetLogYaxis(True)
    
    # add chi2 to plot
@@ -203,17 +217,6 @@ def main():
    print( "InverseCDF( 0.95 ) = "+str(freqCalcResult.GetNullDistribution().InverseCDF(0.95)) )
    print( "InverseCDF( 0.997 ) = "+str(freqCalcResult.GetNullDistribution().InverseCDF(0.997)) )
    
-
-#    
-#    # adding non-central chi2
-#    #ROOT::Math::noncentral_chisquared_pdf(_x,k,lambda)
-#    nPOI = 1
-#    Lambda = 1.5 / 1.41   # DeltaMH / obs testStat
-#    f2 = ROOT.TF1("f2", "1*ROOT::Math::noncentral_chisquared_pdf(2*x,%d,%f)" % (nPOI,Lambda), 0,20)
-#    f2.SetLineColor( ROOT.kOrange )
-#    f2.SetLineStyle( 2 )
-#    plot.AddTF1( f2, "noncentral #chi^{2}(2x,%d,#Lambda=%.2f)" % (nPOI,Lambda) );
-
    
    plot.Draw()
    c1.SaveAs(options.output.replace(".root",".eps"))
