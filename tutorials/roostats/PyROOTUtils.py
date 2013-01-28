@@ -28,8 +28,8 @@ class Legend( ROOT.TLegend ):
          
          Change the font with font=62 (default is 42).
       """
-      if x2 == 1.1: halign = "left"
-      if y2 == 1.1: valign = "top"
+      if x2 == 1.1  and  halign == "fixed": halign = "left"
+      if y2 == 1.1  and  valign == "fixed": valign = "top"
       self.halign = halign
       self.valign = valign
       ROOT.TLegend.__init__( self, x1, y1, x2, y2 )
@@ -63,6 +63,7 @@ class Legend( ROOT.TLegend ):
       if self.halign == "right":
          self.SetX2( self.GetX1() )
          self.SetX1( self.GetX2() - width )
+         print( "=--------------> "+str(width) )
       if self.halign == "center":
          center = self.GetX1()
          self.SetX1( center - width/2 )
@@ -82,6 +83,10 @@ class Graph( ROOT.TGraph ):
              x = [x1,x2,...]
              y = [y1,y2,...]
       """
+
+      if x == None:
+         print( "WARNING: Tried to make graph of NULL object. Abort." )
+         return
 
       if isinstance( x,ROOT.TObject ):
          ROOT.TGraph.__init__( self, x )
@@ -248,7 +253,7 @@ def DrawLine( x1,y1,x2,y2, lineWidth=None, lineStyle=None, lineColor=None ):
    return l
 
 
-def DrawTextOneLine( x, y, text, color = 1, size = 0.04, NDC = True, halign = "left", valign = "bottom", skipLines = 0 ):
+def DrawTextOneLine( x, y, text, textColor = 1, textSize = 0.04, NDC = True, halign = "left", valign = "bottom", skipLines = 0 ):
    """ This is just a helper. Don't use. Use DrawText instead. """
    
    halignMap = {"left":1, "center":2, "right":3}
@@ -263,17 +268,17 @@ def DrawTextOneLine( x, y, text, color = 1, size = 0.04, NDC = True, halign = "l
    l = ROOT.TLatex()
    if NDC: l.SetNDC()
    l.SetTextAlign( 10*halignMap[halign] + valignMap[valign] )
-   l.SetTextColor( color )
-   l.SetTextSize( size )
+   l.SetTextColor( textColor )
+   l.SetTextSize( textSize )
    l.DrawLatex( x, y, text )
    return l
    
-def DrawText( x, y, text, color = 1, size = 0.04, NDC = True, halign = "left", valign = "bottom" ):
+def DrawText( x, y, text, textColor = 1, textSize = 0.04, NDC = True, halign = "left", valign = "bottom" ):
    objs = []
    skipLines = 0
    for line in text.split('\n'):
-      objs.append( DrawTextOneLine( x, y, line, color, size, NDC, halign, valign, skipLines ) )
-      if NDC == True: y -= 0.05 * size/0.04
+      objs.append( DrawTextOneLine( x, y, line, textColor, textSize, NDC, halign, valign, skipLines ) )
+      if NDC == True: y -= 0.05 * textSize/0.04
       else:
          skipLines += 1
       

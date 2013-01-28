@@ -3,6 +3,7 @@
  * Package: RooFitModels                                                     *
  * @(#)root/roofit:$Id: RooParamKeysPdf.cxx 44644 2012-06-11 11:47:21Z moneta $
  * Authors:                                                                  *
+ *   SK, Sven Kreiss,     NYU,                    sk@svenkreiss.com          *
  *   GR, Gerhard Raven,   UC San Diego,        raven@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
