@@ -45,6 +45,7 @@
 #pragma link C++ class RooChiSquarePdf+ ;
 #pragma link C++ class RooIntegralMorph+ ;
 #pragma link C++ class RooMomentMorph+ ;
+#pragma link C++ class RooStarMomentMorph+ ;
 #pragma link C++ class RooStepFunction+ ;
 #pragma link C++ class RooMultiBinomial+ ;
 #pragma link C++ class Roo1DMomentMorphFunction+ ;
