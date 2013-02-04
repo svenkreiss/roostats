@@ -29,7 +29,7 @@ class SequentialProposal : public ProposalFunction {
    public:
    SequentialProposal() : RooStats::ProposalFunction(), fDivisor(0) {}
       SequentialProposal(double divisor);
-      SequentialProposal(double divisor, RooArgSet& oversampling, int oversamplingFactor);
+      SequentialProposal(double divisor, const RooArgSet& oversampling, int oversamplingFactor);
 
       // Populate xPrime with a new proposed point
       virtual void Propose(RooArgSet& xPrime, RooArgSet& x);
@@ -50,7 +50,7 @@ class SequentialProposal : public ProposalFunction {
     private:
       double fDivisor;
 
-      RooArgSet* fOversamplingVariables;
+      const RooArgSet* fOversamplingVariables;
       int fOversamplingFactor;
 };
 

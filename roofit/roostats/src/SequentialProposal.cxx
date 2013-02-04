@@ -31,7 +31,7 @@ SequentialProposal::SequentialProposal(double divisor) :
 {
 }
 
-SequentialProposal::SequentialProposal(double divisor, RooArgSet& oversamplingVariables, int oversamplingFactor) : 
+SequentialProposal::SequentialProposal(double divisor, const RooArgSet& oversamplingVariables, int oversamplingFactor) : 
     ProposalFunction(),
     fDivisor(1./divisor),
     fOversamplingVariables(&oversamplingVariables),

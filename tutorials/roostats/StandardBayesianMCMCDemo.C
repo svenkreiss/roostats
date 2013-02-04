@@ -40,6 +40,7 @@ for simple problems, but it scales to much more complicated cases.
 #include "RooStats/ProposalHelper.h"
 #include "RooStats/ProposalHelper.h"
 #include "RooFitResult.h"
+#include "RooRandom.h"
 
 
 using namespace RooFit;
