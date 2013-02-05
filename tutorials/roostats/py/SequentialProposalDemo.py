@@ -15,11 +15,14 @@ parser.add_option("-w", "--wsName", help="Workspace name", type="string", dest="
 parser.add_option("-m", "--mcName", help="ModelConfig name", type="string", dest="mcName", default="ModelConfig")
 parser.add_option("-d", "--dataName", help="data name", type="string", dest="dataName", default="obsData")
 
+parser.add_option("-f", "--fullRun", help="Do a full run.", dest="fullRun", default=False, action="store_true")
+
 parser.add_option("-q", "--quiet", dest="verbose", action="store_false", default=True, help="Quiet output.")
 options,args = parser.parse_args()
 
 
 import ROOT
+ROOT.gROOT.SetBatch( True )
 import PyROOTUtils
 import math
 
@@ -67,6 +70,7 @@ def main():
 
    firstPOI = mc.GetParametersOfInterest().first()
    firstPOI.setMax(10.)
+   listNuisPars = ROOT.RooArgList( mc.GetNuisanceParameters() )
 
 
    # this proposal function seems fairly robust
@@ -87,22 +91,32 @@ def main():
    
    # We want to create an overview using the following proposal functions
    proposalFunctions = [
-      { "proposal": ROOT.RooStats.SequentialProposal(10, mc.GetParametersOfInterest(), 3), 
-        "id"      : "SequentialProposal_10_03",
-        "title"   : "Divisor = 10, Oversampling of POI = 3" }
+         { "proposal": ROOT.RooStats.SequentialProposal(10), 
+           "id"      : "SequentialProposal",
+           "title"   : "Standard configuration" },
    ]
+   if options.fullRun:
+      proposalFunctions += [
+         { "proposal": ROOT.RooStats.SequentialProposal(100), 
+           "id"      : "SequentialProposal_100",
+           "title"   : "Divisor = 100" },
+         { "proposal": ROOT.RooStats.SequentialProposal(10, mc.GetParametersOfInterest(), 3), 
+           "id"      : "SequentialProposal_10_03",
+           "title"   : "Divisor = 10, Oversampling of POI = 3" },
+         { "proposal": ROOT.RooStats.SequentialProposal(10, mc.GetParametersOfInterest(), 10), 
+           "id"      : "SequentialProposal_10_10",
+           "title"   : "Divisor = 10, Oversampling of POI = 10" },
+      ]
    
    
    mcmc = ROOT.RooStats.MCMCCalculator(data,mc)
    mcmc.SetConfidenceLevel(0.95) # 95% interval
-   #mcmc.SetProposalFunction(sp)
-   mcmc.SetNumIters(10000)         # Metropolis-Hastings algorithm iterations
-   mcmc.SetNumBurnInSteps(2000)     # first N steps to be ignored as burn-in
-
-   # default is the shortest interval.  here use central
-   mcmc.SetLeftSideTailFraction(0); # for one-sided Bayesian interval
+   mcmc.SetNumIters(1000000)         # Metropolis-Hastings algorithm iterations
+   mcmc.SetNumBurnInSteps(30000)     # first N steps to be ignored as burn-in
+   mcmc.SetLeftSideTailFraction(0);  # for one-sided Bayesian interval
 
    for pF in proposalFunctions:
+      print( "\n\n---------- "+pF["title"]+" ----------------" )
       mcmc.SetProposalFunction( pF["proposal"] )
       interval = mcmc.GetInterval()
 
@@ -113,22 +127,28 @@ def main():
          interval.UpperLimit(firstPOI)
       ) )
 
-      c1 = ROOT.TCanvas(pF["id"]+"_intervalPlot")
+      c1 = ROOT.TCanvas(pF["id"]+"_intervalPlot", pF["id"]+"_intervalPlot", 800, 600)
       plot = ROOT.RooStats.MCMCIntervalPlot(interval)
       plot.Draw()
-      c1.SaveAs( options.output+pF["id"]+"_interval.jpg" )
+      c1.SaveAs( options.output+pF["id"]+"_interval.png" )
+      c1.SaveAs( options.output+pF["id"]+"_interval.eps" )
+
+      c2 = ROOT.TCanvas(pF["id"]+"_POIAndFirstNuisParWalk", pF["id"]+"_POIAndFirstNuisParWalk", 800, 600)
+      plot.DrawChainScatter( firstPOI, listNuisPars.at(0) )
+      c2.SaveAs( options.output+pF["id"]+"_POIAndFirstNuisParWalk.png" )
+      c2.SaveAs( options.output+pF["id"]+"_POIAndFirstNuisParWalk.eps" )
       
-      c2 = ROOT.TCanvas(pF["id"]+"_extraPlots", pF["id"]+"_extraPlots", 1200, 800)
-      list = ROOT.RooArgList( mc.GetNuisanceParameters() )
-      if list.getSize() > 1:
-         ny = ROOT.TMath.CeilNint( math.sqrt(list.getSize()) )
-         nx = ROOT.TMath.CeilNint( float(list.getSize())/ny )
+      c3 = ROOT.TCanvas(pF["id"]+"_extraPlots", pF["id"]+"_extraPlots", 1200, 800)
+      if listNuisPars.getSize() > 1:
+         ny = ROOT.TMath.CeilNint( math.sqrt(listNuisPars.getSize()) )
+         nx = ROOT.TMath.CeilNint( float(listNuisPars.getSize())/ny )
          c2.Divide( nx,ny )
       # draw a scatter plot of chain results for poi vs each nuisance parameters
-      for i in range( list.getSize() ):
+      for i in range( listNuisPars.getSize() ):
          c2.cd(i+1)
-         plot.DrawChainScatter( firstPOI, list.at(i) )
-      c2.SaveAs( options.output+pF["id"]+"_extras.jpg" )
+         plot.DrawChainScatter( firstPOI, listNuisPars.at(i) )
+      c3.SaveAs( options.output+pF["id"]+"_extras.png" )
+      c3.SaveAs( options.output+pF["id"]+"_extras.eps" )
 
 
 if __name__ == "__main__":

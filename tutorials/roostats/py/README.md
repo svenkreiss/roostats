@@ -1,8 +1,21 @@
 
 # Sequential Proposal
 
-This is to study properties of sequential proposal.
-[![seqProp_interval](docImages/SequentialProposal_interval.png)](docImages/SequentialProposal_interval.eps)
-[![seqProp_extras](docImages/SequentialProposal_extras.png)](docImages/SequentialProposal_extras.eps)
+Running the Standard configuration of MCMC and SequentialProposal(10.0).
+<!--![seqProp_interval](docImages/SequentialProposal_interval.png)-->
+![seqProp_extras](docImages/SequentialProposal_POIAndFirstNuisParWalk.png)
+
+Changing to SequentialProposal(100.0).
+<!--![seqProp_interval](docImages/SequentialProposal_100_interval.png)-->
+![seqProp_extras](docImages/SequentialProposal_100_POIAndFirstNuisParWalk.png)
+
+Now, using the standard SequentialProposal(10.0), let's look at various values of 
+the "oversampling". This is oversampling=3.
+<!--![seqProp_interval](docImages/SequentialProposal_10_03_interval.png)-->
+![seqProp_extras](docImages/SequentialProposal_10_03_POIAndFirstNuisParWalk.png)
+
+And oversampling=10.
+<!--![seqProp_interval](docImages/SequentialProposal_10_10_interval.png)-->
+![seqProp_extras](docImages/SequentialProposal_10_10_POIAndFirstNuisParWalk.png)
 
 Work in progress.
