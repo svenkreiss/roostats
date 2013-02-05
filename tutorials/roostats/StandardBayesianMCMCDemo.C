@@ -40,7 +40,10 @@ for simple problems, but it scales to much more complicated cases.
 #include "RooStats/ProposalHelper.h"
 #include "RooStats/ProposalHelper.h"
 #include "RooFitResult.h"
+<<<<<<< HEAD
 #include "RooRandom.h"
+=======
+>>>>>>> development
 
 
 using namespace RooFit;
@@ -49,10 +52,14 @@ using namespace RooStats;
 void StandardBayesianMCMCDemo(const char* infile = "",
 		      const char* workspaceName = "combined",
 		      const char* modelConfigName = "ModelConfig",
+<<<<<<< HEAD
 		      const char* dataName = "obsData")
 {
 
   RooRandom::randomGenerator()->SetSeed( 0 );
+=======
+		      const char* dataName = "obsData"){
+>>>>>>> development
 
   /////////////////////////////////////////////////////////////
   // First part is just to access a user-defined file 
