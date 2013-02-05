@@ -2,7 +2,7 @@
 # Sequential Proposal
 
 This is to study properties of sequential proposal.
-![seqProp_10_03_interval](docImages/SequentialProposal_interval.svg)
-![seqProp_10_03_extras](docImages/SequentialProposal_10_03_extras.jpg)
+[![seqProp_interval](docImages/SequentialProposal_interval.png)](docImages/SequentialProposal_interval.eps)
+[![seqProp_extras](docImages/SequentialProposal_extras.png)](docImages/SequentialProposal_extras.eps)
 
 Work in progress.
