@@ -116,7 +116,7 @@ def main():
       c1 = ROOT.TCanvas(pF["id"]+"_intervalPlot")
       plot = ROOT.RooStats.MCMCIntervalPlot(interval)
       plot.Draw()
-      c1.SaveAs( options.output+pF["id"]+"_interval.png" )
+      c1.SaveAs( options.output+pF["id"]+"_interval.jpg" )
       
       c2 = ROOT.TCanvas(pF["id"]+"_extraPlots", pF["id"]+"_extraPlots", 1200, 800)
       list = ROOT.RooArgList( mc.GetNuisanceParameters() )
@@ -128,7 +128,7 @@ def main():
       for i in range( list.getSize() ):
          c2.cd(i+1)
          plot.DrawChainScatter( firstPOI, list.at(i) )
-      c2.SaveAs( options.output+pF["id"]+"_extras.png" )
+      c2.SaveAs( options.output+pF["id"]+"_extras.jpg" )
 
 
 if __name__ == "__main__":
