@@ -127,16 +127,14 @@ def main():
          interval.UpperLimit(firstPOI)
       ) )
 
-      c1 = ROOT.TCanvas(pF["id"]+"_intervalPlot", pF["id"]+"_intervalPlot", 800, 600)
+      c1 = ROOT.TCanvas(pF["id"]+"_intervalPlot", pF["id"]+"_intervalPlot", 500, 250)
       plot = ROOT.RooStats.MCMCIntervalPlot(interval)
       plot.Draw()
       c1.SaveAs( options.output+pF["id"]+"_interval.png" )
-      c1.SaveAs( options.output+pF["id"]+"_interval.eps" )
 
-      c2 = ROOT.TCanvas(pF["id"]+"_POIAndFirstNuisParWalk", pF["id"]+"_POIAndFirstNuisParWalk", 800, 600)
+      c2 = ROOT.TCanvas(pF["id"]+"_POIAndFirstNuisParWalk", pF["id"]+"_POIAndFirstNuisParWalk", 500, 250)
       plot.DrawChainScatter( firstPOI, listNuisPars.at(0) )
       c2.SaveAs( options.output+pF["id"]+"_POIAndFirstNuisParWalk.png" )
-      c2.SaveAs( options.output+pF["id"]+"_POIAndFirstNuisParWalk.eps" )
       
       c3 = ROOT.TCanvas(pF["id"]+"_extraPlots", pF["id"]+"_extraPlots", 1200, 800)
       c3.Divide( 3, listNuisPars.getSize() )
@@ -168,7 +166,6 @@ def main():
          c3.Update()
 
       c3.SaveAs( options.output+pF["id"]+"_extras.png" )
-      c3.SaveAs( options.output+pF["id"]+"_extras.eps" )
 
 
 if __name__ == "__main__":
