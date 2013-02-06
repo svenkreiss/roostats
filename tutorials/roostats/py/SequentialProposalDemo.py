@@ -22,7 +22,7 @@ options,args = parser.parse_args()
 
 
 import ROOT
-ROOT.gROOT.SetBatch( True )
+#ROOT.gROOT.SetBatch( True )
 import PyROOTUtils
 import math
 
@@ -139,14 +139,34 @@ def main():
       c2.SaveAs( options.output+pF["id"]+"_POIAndFirstNuisParWalk.eps" )
       
       c3 = ROOT.TCanvas(pF["id"]+"_extraPlots", pF["id"]+"_extraPlots", 1200, 800)
-      if listNuisPars.getSize() > 1:
-         ny = ROOT.TMath.CeilNint( math.sqrt(listNuisPars.getSize()) )
-         nx = ROOT.TMath.CeilNint( float(listNuisPars.getSize())/ny )
-         c2.Divide( nx,ny )
+      c3.Divide( 3, listNuisPars.getSize() )
+      cont = []
       # draw a scatter plot of chain results for poi vs each nuisance parameters
       for i in range( listNuisPars.getSize() ):
-         c2.cd(i+1)
+         c3.cd( i*3 + 1 )
          plot.DrawChainScatter( firstPOI, listNuisPars.at(i) )
+
+         c3.cd( i*3 + 2 )
+         h4 = plot.GetMinNLLHist1D( listNuisPars.at(i) )
+         if h4.GetMaximum() > 15: h4.SetMaximum( 15 )
+         h4.Draw( "HIST" )
+         cont.append( h4 )
+
+         c3.cd( i*3 + 3 )
+         h2 = plot.GetHist1D( listNuisPars.at(i) )
+         h2.SetTitle( "Comparison of Posterior (red) and Likelihood Shape (blue)" )
+         h2.GetYaxis().SetTitle( "Posterior (red) / Likelihood Shape (blue)" )
+         h2.SetLineColor( ROOT.kRed )
+         h2.Scale( 1./(h2.Integral()) )
+         h2.Draw( "HIST" )
+         cont.append( h2 )
+         h3 = plot.GetMaxLikelihoodHist1D( listNuisPars.at(i) )
+         h3.SetLineColor( ROOT.kBlue )
+         h3.Scale( 1./h3.Integral() )
+         h3.Draw( "HIST SAME" )
+         cont.append( h3 )
+         c3.Update()
+
       c3.SaveAs( options.output+pF["id"]+"_extras.png" )
       c3.SaveAs( options.output+pF["id"]+"_extras.eps" )
 
