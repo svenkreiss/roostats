@@ -1,4 +1,11 @@
 
+# MCMC Plots
+
+This includes a comparison of the Posterior and the profile Likelihood shape in 
+the right column.
+![seqProp_extras](docImages/SequentialProposal_extras.png)
+
+
 # Sequential Proposal
 
 Running the Standard configuration of MCMC and SequentialProposal(10.0).
