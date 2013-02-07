@@ -111,14 +111,15 @@ def main():
    
    mcmc = ROOT.RooStats.MCMCCalculator(data,mc)
    mcmc.SetConfidenceLevel(0.95) # 95% interval
-   mcmc.SetNumIters(1000000)         # Metropolis-Hastings algorithm iterations
-   mcmc.SetNumBurnInSteps(30000)     # first N steps to be ignored as burn-in
+   mcmc.SetNumIters(100000)          # Metropolis-Hastings algorithm iterations
    mcmc.SetLeftSideTailFraction(0);  # for one-sided Bayesian interval
 
    for pF in proposalFunctions:
       print( "\n\n---------- "+pF["title"]+" ----------------" )
       mcmc.SetProposalFunction( pF["proposal"] )
       interval = mcmc.GetInterval()
+      interval.SetNumBurnInForFractionOfEntries( 0.2 )
+      #interval.SetNumBurnInForNumEntries( 10000 )
 
       # print out the iterval on the first Parameter of Interest
       print( "\n95%% interval on %s is [%f,%f]" % (

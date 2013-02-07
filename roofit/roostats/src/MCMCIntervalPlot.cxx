@@ -795,12 +795,16 @@ TH2* MCMCIntervalPlot::GetHist2D(RooRealVar& xVar, RooRealVar& yVar)
 TH1* MCMCIntervalPlot::GetHist1D(RooRealVar& var)
 {
    const MarkovChain* markovChain = fInterval->GetChain();
-   const RooDataSet* data = markovChain->GetAsConstDataSet();
 
    TString hName( "distribution_" );
    hName += var.GetName();
    TH1F *h = new TH1F(hName, hName, var.getBins(), var.getMin(), var.getMax());
-   data->fillHistogram( h, var );
+   const RooArgSet* entry;
+   for (Int_t i = fInterval->GetNumBurnInSteps(); i < markovChain->Size(); i++) {
+      entry = markovChain->Get(i);
+      h->Fill( entry->getRealValue(var.GetName()), markovChain->Weight() );
+   }
+   //cout << "INFO -- GetHist1D(): Entries in Posterior: "<<h->GetEntries()<<", Integral: "<<h->Integral()<<endl;
    h->GetXaxis()->SetTitle( var.GetName() );
    h->GetYaxis()->SetTitle( "Distribution" );
    return h;
@@ -808,27 +812,24 @@ TH1* MCMCIntervalPlot::GetHist1D(RooRealVar& var)
 TH1* MCMCIntervalPlot::GetHist1DSlice(RooRealVar& var, RooRealVar& sliceVar, double sliceMin, double sliceMax)
 {
    const MarkovChain* markovChain = fInterval->GetChain();
-   const RooDataSet* data = markovChain->GetAsConstDataSet();
 
    TString hName( "distribution_" );
    hName += var.GetName();
    TH1F *h = new TH1F(hName, hName, var.getBins(), var.getMin(), var.getMax());
-   data->fillHistogram( h, var, TString::Format("%s>%f && %s<%f", sliceVar.GetName(), sliceMin, sliceVar.GetName(), sliceMax) );
+   const RooArgSet* entry;
+   for (Int_t i = fInterval->GetNumBurnInSteps(); i < markovChain->Size(); i++) {
+      entry = markovChain->Get(i);
+      if( entry->getRealValue(sliceVar.GetName()) < sliceMin ) continue;
+      if( entry->getRealValue(sliceVar.GetName()) > sliceMax ) continue;
+      h->Fill( entry->getRealValue(var.GetName()), markovChain->Weight() );
+   }
    h->GetXaxis()->SetTitle( var.GetName() );
    h->GetYaxis()->SetTitle( "Distribution" );
    return h;
 }
 TH1* MCMCIntervalPlot::GetHist1DSliceNormalized(RooRealVar& var, RooRealVar& sliceVar, double sliceMin, double sliceMax)
 {
-   const MarkovChain* markovChain = fInterval->GetChain();
-   const RooDataSet* data = markovChain->GetAsConstDataSet();
-
-   TString hName( "distribution_" );
-   hName += var.GetName();
-   TH1F *h = new TH1F(hName, hName, var.getBins(), var.getMin(), var.getMax());
-   data->fillHistogram( h, var, TString::Format("%s>%f && %s<%f", sliceVar.GetName(), sliceMin, sliceVar.GetName(), sliceMax) );
-   h->GetXaxis()->SetTitle( var.GetName() );
-   h->GetYaxis()->SetTitle( "Distribution" );
+   TH1* h = GetHist1DSlice( var,sliceVar,sliceMin,sliceMax );
    h->Scale( 1./ h->Integral() );
    return h;
 }
@@ -839,36 +840,9 @@ TH1* MCMCIntervalPlot::GetHist1DSliceNormalized(RooRealVar& var, RooRealVar& sli
 
 
 
-TH1* MCMCIntervalPlot::GetMaxNLLHist1D(RooRealVar& xVar)
-{
-   const MarkovChain* markovChain = fInterval->GetChain();
-   const RooDataSet* data = markovChain->GetAsConstDataSet();
-
-   TString hName( "maxNLLHist_" );
-   hName += xVar.GetName();
-   TH1F *h = new TH1F( hName, "Maximum NLL per Bin",
-      xVar.getBins(), xVar.getMin(), xVar.getMax()
-   );
-   h->GetXaxis()->SetTitle( xVar.GetName() );
-
-   for( int i=0; i < data->numEntries(); i++ ) {
-      xVar.setVal( data->get(i)->getRealValue(xVar.GetName()) );
-      double nll = markovChain->NLL(i);
-      //cout << "x: " << xVar.getVal() << " \ty: " << yVar.getVal() << " \tnll: " << nll << endl;
-      if( h->GetBinContent( h->FindBin(xVar.getVal()) ) < nll  ||
-          h->GetBinContent( h->FindBin(xVar.getVal()) ) == 0.0
-      ) {
-         h->SetBinContent( h->FindBin(xVar.getVal()), nll);
-      }
-   }
-
-   return h;
-}
-
 TH1* MCMCIntervalPlot::GetMinNLLHist1D(RooRealVar& xVar, bool subtractMinNLL)
 {
    const MarkovChain* markovChain = fInterval->GetChain();
-   const RooDataSet* data = markovChain->GetAsConstDataSet();
 
    TString hName( "minNLLHist_" );
    hName += xVar.GetName();
@@ -882,15 +856,15 @@ TH1* MCMCIntervalPlot::GetMinNLLHist1D(RooRealVar& xVar, bool subtractMinNLL)
 
    double minNLL = TMath::Infinity();
    double maxNLL = -TMath::Infinity();
-   for( int i=0; i < data->numEntries(); i++ ) {
+   for( int i=fInterval->GetNumBurnInSteps(); i < markovChain->Size(); i++ ) {
       double nll = markovChain->NLL(i);
       if( nll < minNLL ) minNLL = nll;
       if( nll > maxNLL ) maxNLL = nll;
    }
    //cout << "minNLL = " << minNLL << endl;
    
-   for( int i=0; i < data->numEntries(); i++ ) {
-      xVar.setVal( data->get(i)->getRealValue(xVar.GetName()) );
+   for( int i=fInterval->GetNumBurnInSteps(); i < markovChain->Size(); i++ ) {
+      xVar.setVal( markovChain->Get(i)->getRealValue(xVar.GetName()) );
       double nll = markovChain->NLL(i);
       if( subtractMinNLL ) nll -= minNLL;
       //cout << "x: " << xVar.getVal() << " \tnll: " << nll << " \tbin: " << h->GetBinContent( h->FindBin(xVar.getVal()) ) << endl;
@@ -934,38 +908,11 @@ TH1* MCMCIntervalPlot::GetMaxLikelihoodHist1D(RooRealVar& xVar)
 
 
 
-TH2* MCMCIntervalPlot::GetMaxNLLHist2D(RooRealVar& xVar, RooRealVar& yVar)
-{
-   const MarkovChain* markovChain = fInterval->GetChain();
-   const RooDataSet* data = markovChain->GetAsConstDataSet();
-
-   TString hName( "maxNLLHist2D_" );
-   hName += xVar.GetName();
-   hName += "_";
-   hName += yVar.GetName();
-   TH2F *h = new TH2F( hName, "Maximum NLL per Bin", 
-      xVar.getBins(), xVar.getMin(), xVar.getMax(),
-      yVar.getBins(), yVar.getMin(), yVar.getMax()
-   );
-   h->GetXaxis()->SetTitle( xVar.GetName() );
-   h->GetYaxis()->SetTitle( yVar.GetName() );
-
-   for( int i=0; i < data->numEntries(); i++ ) {
-      xVar.setVal( data->get(i)->getRealValue(xVar.GetName()) );
-      yVar.setVal( data->get(i)->getRealValue(yVar.GetName()) );
-      double nll = markovChain->NLL(i);
-      //cout << "x: " << xVar.getVal() << " \ty: " << yVar.getVal() << " \tnll: " << nll << endl;
-      if( nll > h->GetBinContent(xVar.getVal(), yVar.getVal()) ) {
-         h->SetBinContent(xVar.getVal(), yVar.getVal(), nll);
-      }
-   }
-
-   return h;
-}
-
-
 TH2* MCMCIntervalPlot::GetMaxLikelihoodHist2D(RooRealVar& xVar, RooRealVar& yVar)
 {
+   cout << "!!!!!!!!!!!!!! BROKEN" << endl;
+   
+   
    const MarkovChain* markovChain = fInterval->GetChain();
    const RooDataSet* data = markovChain->GetAsConstDataSet();
 

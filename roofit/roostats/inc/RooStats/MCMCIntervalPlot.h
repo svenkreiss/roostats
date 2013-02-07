@@ -70,10 +70,8 @@ namespace RooStats {
       void DrawNLLHist(const Option_t* options = NULL);
       void DrawWeightHist(const Option_t* options = NULL);
 
-      TH1* GetMaxNLLHist1D(RooRealVar& xVar);
       TH1* GetMinNLLHist1D(RooRealVar& xVar, bool subtractMinNLL=true);
       TH1* GetMaxLikelihoodHist1D(RooRealVar& xVar);
-      TH2* GetMaxNLLHist2D(RooRealVar& xVar, RooRealVar& yVar);
       TH2* GetMaxLikelihoodHist2D(RooRealVar& xVar, RooRealVar& yVar);
 
 
