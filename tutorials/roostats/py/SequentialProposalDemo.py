@@ -101,22 +101,6 @@ def main():
    listNuisPars = ROOT.RooArgList( mc.GetNuisanceParameters() )
 
 
-   # this proposal function seems fairly robust
-   #SequentialProposal sp(0.1);
-   # [#1] INFO:Eval -- Proposal acceptance rate: 20.0123%
-   # [#1] INFO:Eval -- Number of steps in chain: 200123
-   # 
-   # 95% interval on SigXsecOverSM is : [0, 2.15359] 
-   #
-   # Use factor 10 oversampling on parametersOfInterest
-   #SequentialProposal sp(0.1, *mc->GetParametersOfInterest(), 3);
-   # Factor 3:
-   # [#1] INFO:Eval -- Proposal acceptance rate: 18.0398%
-   # [#1] INFO:Eval -- Number of steps in chain: 180398
-   # 
-   # 95% interval on SigXsecOverSM is : [0, 2.15503] 
-   #SequentialProposal sp(10, *mc->GetParametersOfInterest(), 3);
-   
    # We want to create an overview using the following proposal functions
    proposalFunctions = [
          { "proposal": ROOT.RooStats.SequentialProposal(10), 
