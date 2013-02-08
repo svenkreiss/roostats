@@ -2,7 +2,7 @@
 # MCMC Plots
 
 This includes a comparison of the Posterior and the profile Likelihood shape in 
-the right column.<br />
+the middle column.<br />
 ![seqProp_extras](docImages/SequentialProposal_extras.png)
 
 NLL time development.<br />

@@ -27,7 +27,7 @@ ROOT.gStyle.SetOptStat( 0 )
 ROOT.gStyle.SetHistLineWidth( 2 )
 # Set the paper and margin sizes:
 ROOT.gStyle.SetPaperSize( 20, 26 )
-ROOT.gStyle.SetPadTopMargin( 0.05 )
+ROOT.gStyle.SetPadTopMargin( 0.07 )
 ROOT.gStyle.SetPadRightMargin( 0.05 )
 ROOT.gStyle.SetPadBottomMargin( 0.16 )
 ROOT.gStyle.SetPadLeftMargin( 0.16 )
