@@ -72,6 +72,7 @@ namespace RooStats {
 
       TH1* GetMinNLLHist1D(RooRealVar& xVar, bool subtractMinNLL=true);
       TH1* GetMaxLikelihoodHist1D(RooRealVar& xVar);
+      TH2* GetMinNLLHist2D(RooRealVar& xVar, RooRealVar& yVar, bool subtractMinNLL=true);
       TH2* GetMaxLikelihoodHist2D(RooRealVar& xVar, RooRealVar& yVar);
 
 

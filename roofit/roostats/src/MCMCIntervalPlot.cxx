@@ -777,17 +777,24 @@ void MCMCIntervalPlot::DrawChainScatter(RooRealVar& xVar, RooRealVar& yVar) {
 TH2* MCMCIntervalPlot::GetHist2D(RooRealVar& xVar, RooRealVar& yVar)
 {
    const MarkovChain* markovChain = fInterval->GetChain();
-   const RooDataSet* data = markovChain->GetAsConstDataSet();
 
    TString hName( "distribution2D_" );
    hName += xVar.GetName();
    hName += "_Vs_";
    hName += yVar.GetName();
-   TH2F *h = data->createHistogram( xVar, yVar, xVar.getBins(), yVar.getBins() );
-   h->SetNameTitle( hName, hName );
+   TH2F *h = new TH2F(hName, hName, 
+      xVar.getBins(), xVar.getMin(), xVar.getMax(),
+      yVar.getBins(), yVar.getMin(), yVar.getMax()
+   );
+   const RooArgSet* entry;
+   for (Int_t i = fInterval->GetNumBurnInSteps(); i < markovChain->Size(); i++) {
+      entry = markovChain->Get(i);
+      h->Fill( entry->getRealValue(xVar.GetName()), entry->getRealValue(yVar.GetName()), markovChain->Weight() );
+   }
+   //cout << "INFO -- GetHist1D(): Entries in Posterior: "<<h->GetEntries()<<", Integral: "<<h->Integral()<<endl;
    h->GetXaxis()->SetTitle( xVar.GetName() );
    h->GetYaxis()->SetTitle( yVar.GetName() );
-   h->Scale( 1./ h->Integral() );
+   h->GetZaxis()->SetTitle( "Distribution" );
    return h;
 }
 
@@ -883,6 +890,53 @@ TH1* MCMCIntervalPlot::GetMinNLLHist1D(RooRealVar& xVar, bool subtractMinNLL)
    return h;
 }
 
+TH2* MCMCIntervalPlot::GetMinNLLHist2D(RooRealVar& xVar, RooRealVar& yVar, bool subtractMinNLL)
+{
+   const MarkovChain* markovChain = fInterval->GetChain();
+
+   TString hName( "minNLLHist2D_" );
+   hName += xVar.GetName();
+   hName += "_";
+   hName += yVar.GetName();
+   TH2F *h = new TH2F( hName, "Minimum NLL per Bin",
+      xVar.getBins(), xVar.getMin(), xVar.getMax(),
+      yVar.getBins(), yVar.getMin(), yVar.getMax()
+   );
+   h->GetXaxis()->SetTitle( xVar.GetName() );
+   h->GetYaxis()->SetTitle( yVar.GetName() );
+   h->GetZaxis()->SetTitle( "Minimum NLL per Bin" );
+   // initialize bin values
+   for( int i=0; i < (h->GetNbinsX()+2)*(h->GetNbinsY()+2); i++ ) h->SetBinContent( i, -1.0 );
+
+   double minNLL = TMath::Infinity();
+   double maxNLL = -TMath::Infinity();
+   for( int i=fInterval->GetNumBurnInSteps(); i < markovChain->Size(); i++ ) {
+      double nll = markovChain->NLL(i);
+      if( nll < minNLL ) minNLL = nll;
+      if( nll > maxNLL ) maxNLL = nll;
+   }
+   //cout << "minNLL = " << minNLL << endl;
+   
+   for( int i=fInterval->GetNumBurnInSteps(); i < markovChain->Size(); i++ ) {
+      xVar.setVal( markovChain->Get(i)->getRealValue(xVar.GetName()) );
+      yVar.setVal( markovChain->Get(i)->getRealValue(yVar.GetName()) );
+      double nll = markovChain->NLL(i);
+      if( subtractMinNLL ) nll -= minNLL;
+      //cout << "x: " << xVar.getVal() << " \tnll: " << nll << " \tbin: " << h->GetBinContent( h->FindBin(xVar.getVal()) ) << endl;
+      if( h->GetBinContent( h->FindBin(xVar.getVal(),yVar.getVal()) ) > nll  ||
+          h->GetBinContent( h->FindBin(xVar.getVal(),yVar.getVal()) ) == -1.0
+      ) {
+         h->SetBinContent( h->FindBin(xVar.getVal(),yVar.getVal()), nll);
+      }
+   }
+
+   // set unset bins to maxNLL
+   for( int i=0; i < (h->GetNbinsX()+2)*(h->GetNbinsY()+2); i++ ) {
+      if( h->GetBinContent(i) == -1.0 ) h->SetBinContent( i, subtractMinNLL ? maxNLL-minNLL : maxNLL );
+   }
+
+   return h;
+}
 
 TH1* MCMCIntervalPlot::GetMaxLikelihoodHist1D(RooRealVar& xVar)
 {
@@ -910,32 +964,23 @@ TH1* MCMCIntervalPlot::GetMaxLikelihoodHist1D(RooRealVar& xVar)
 
 TH2* MCMCIntervalPlot::GetMaxLikelihoodHist2D(RooRealVar& xVar, RooRealVar& yVar)
 {
-   cout << "!!!!!!!!!!!!!! BROKEN" << endl;
+   // Cannot calculate exp(-nll) in most cases because it is numerically
+   // infinite. But we can get minNLL histogram with subtracted global minNLL
+   // and then take the exponential.
    
-   
-   const MarkovChain* markovChain = fInterval->GetChain();
-   const RooDataSet* data = markovChain->GetAsConstDataSet();
-
-   TString hName( "maxLikelihoodHist2D_" );
+   TH2* h = GetMinNLLHist2D( xVar,yVar );
+   TString hName( "maxLHist2D_" );
    hName += xVar.GetName();
    hName += "_";
    hName += yVar.GetName();
-   TH2F *h = new TH2F( hName, "Maximum Likelihood per Bin", 
-      xVar.getBins(), xVar.getMin(), xVar.getMax(),
-      yVar.getBins(), yVar.getMin(), yVar.getMax()
-   );
-   h->GetXaxis()->SetTitle( xVar.GetName() );
-   h->GetYaxis()->SetTitle( yVar.GetName() );
+   h->SetName( hName );
+   h->SetTitle( "Maximum Likelihood per Bin (subtracted)" );
+   h->GetZaxis()->SetTitle( "Maximum Likelihood per Bin (subtracted)" );
 
-   for( int i=0; i < data->numEntries(); i++ ) {
-      xVar.setVal( data->get(i)->getRealValue(xVar.GetName()) );
-      yVar.setVal( data->get(i)->getRealValue(yVar.GetName()) );
-      double nll = markovChain->NLL(i);
-      double L = exp(-nll);
-      //cout << "x: " << xVar.getVal() << " \ty: " << yVar.getVal() << "\tNLL: " << nll << " \tL: " << L << endl;
-      if( L > h->GetBinContent( h->FindBin(xVar.getVal(), yVar.getVal())) ) {
-         h->SetBinContent( h->FindBin(xVar.getVal(), yVar.getVal()), L);
-      }
+   for( int i=0; i < (h->GetNbinsX()+2)*(h->GetNbinsY()+2); i++ ) {
+      double newVal = exp(- h->GetBinContent(i));
+      //cout << "nll = " << h->GetBinContent(i) << "   L = " << newVal << endl;
+      h->SetBinContent( i, newVal );
    }
 
    return h;
