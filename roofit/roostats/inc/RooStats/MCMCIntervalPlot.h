@@ -75,11 +75,12 @@ namespace RooStats {
       TH2* GetMinNLLHist2D(RooRealVar& xVar, RooRealVar& yVar, bool subtractMinNLL=true);
       TH2* GetMaxLikelihoodHist2D(RooRealVar& xVar, RooRealVar& yVar);
 
-
       TH1* GetHist1D(RooRealVar& var);
       TH1* GetHist1DSlice(RooRealVar& var, RooRealVar& sliceVar, double sliceMin, double sliceMax);
-      TH1* GetHist1DSliceNormalized(RooRealVar& var, RooRealVar& sliceVar, double sliceMin, double sliceMax);
       TH2* GetHist2D(RooRealVar& xVar, RooRealVar& yVar);
+
+      static double ContourLevel( TH1* h, double integralValue );      
+      
 
    private:
 

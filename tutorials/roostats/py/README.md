@@ -5,6 +5,9 @@ This includes a comparison of the Posterior and the profile Likelihood shape in
 the right column.
 ![seqProp_extras](docImages/SequentialProposal_extras.png)
 
+NLL time development.
+![seqProp_NLLVsTime](docImages/SequentialProposal_NLLTimeDev.png)
+
 
 # Sequential Proposal
 

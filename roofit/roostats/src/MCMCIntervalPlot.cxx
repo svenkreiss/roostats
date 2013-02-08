@@ -834,12 +834,6 @@ TH1* MCMCIntervalPlot::GetHist1DSlice(RooRealVar& var, RooRealVar& sliceVar, dou
    h->GetYaxis()->SetTitle( "Distribution" );
    return h;
 }
-TH1* MCMCIntervalPlot::GetHist1DSliceNormalized(RooRealVar& var, RooRealVar& sliceVar, double sliceMin, double sliceMax)
-{
-   TH1* h = GetHist1DSlice( var,sliceVar,sliceMin,sliceMax );
-   h->Scale( 1./ h->Integral() );
-   return h;
-}
 
 
 
@@ -1135,3 +1129,28 @@ void MCMCIntervalPlot::DrawWeightHist(const Option_t* options)
   //chain.Draw("_MarkovChain_local_nll");
 ////////////////////////////////////////////////////////////////////
 */
+
+
+double MCMCIntervalPlot::ContourLevel( TH1* h, double integralValue ) {
+   int numBins = h->GetNbinsX()+2;
+   if( h->GetNbinsY() > 1 ) numBins *= h->GetNbinsY()+2;
+   if( h->GetNbinsZ() > 1 ) numBins *= h->GetNbinsZ()+2;
+   
+   std::vector<double> bins;
+   for( int i=0; i < numBins; i++ ) bins.push_back( h->GetBinContent(i) ); 
+   std::sort( bins.begin(), bins.end(), std::greater<double>() );  // reverse sort using std::greater<>()
+
+   double integral = h->Integral();   
+   double cumulative = 0.0;
+   for( std::vector<double>::iterator b=bins.begin(); b != bins.end(); b++ ) {
+      cumulative += (*b)/integral;
+      if( cumulative >= integralValue ) return *b;
+   }
+   
+   return 0.0;
+}
+
+
+
+
+

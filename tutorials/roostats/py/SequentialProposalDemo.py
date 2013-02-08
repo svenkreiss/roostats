@@ -24,6 +24,20 @@ options,args = parser.parse_args()
 import ROOT
 ROOT.gROOT.SetBatch( True )
 ROOT.gStyle.SetOptStat( 0 )
+ROOT.gStyle.SetHistLineWidth( 2 )
+# Set the paper and margin sizes:
+ROOT.gStyle.SetPaperSize( 20, 26 )
+ROOT.gStyle.SetPadTopMargin( 0.05 )
+ROOT.gStyle.SetPadRightMargin( 0.05 )
+ROOT.gStyle.SetPadBottomMargin( 0.16 )
+ROOT.gStyle.SetPadLeftMargin( 0.16 )
+# set title offsets (for axis label)
+ROOT.gStyle.SetTitleXOffset(1.4);
+ROOT.gStyle.SetTitleYOffset(1.4);
+# Put tick marks on top and rhs of the plots:
+ROOT.gStyle.SetPadTickX( 1 )
+ROOT.gStyle.SetPadTickY( 1 )
+
 import PyROOTUtils
 import math
 from array import array
@@ -42,29 +56,6 @@ def getContours( hist, level, canvas ):
       contours[co].SetName( "Contour%.0fTG_%d" % (level*100,co) )
    return contours
 
-
-
-def contourLevel( th1, integralValue ):
-   """ Determines the contour level of 1D,2D,3D histograms for a contour that 
-   will enclose integralValue of the highest density points. """
-   
-   # Determining number of bins, but leave out dimensions that are not used.
-   # Unfortunately, root still counts an unused dimension as one bin + 2 overflow bins.
-   #print( "bins in (x,y,z) = (%d,%d,%d)" % (th1.GetNbinsX(),th1.GetNbinsY(),th1.GetNbinsZ()) )
-   numBins = (th1.GetNbinsX()+2)
-   if th1.GetNbinsY() > 1: numBins *= th1.GetNbinsY()+2
-   if th1.GetNbinsZ() > 1: numBins *= th1.GetNbinsZ()+2
-   
-   bins = [ th1.GetBinContent(h) for h in range( numBins ) ]
-   bins = sorted( bins, reverse=True )
-   integral = sum(bins)
-   #print( "sum(bins) = %f, integral = %f" % (integral, th1.Integral()) )
-   
-   cumulative = 0.0
-   for b in bins:
-      cumulative += b/integral
-      if cumulative >= integralValue:
-         return b
 
 
 def main():
@@ -174,21 +165,21 @@ def main():
       plot.DrawChainScatter( firstPOI, listNuisPars.at(0) )
       c2.SaveAs( options.output+pF["id"]+"_POIAndFirstNuisParWalk.png" )
       
-      c3 = ROOT.TCanvas(pF["id"]+"_extraPlots", pF["id"]+"_extraPlots", 2400, 1600)
-      c3.Divide( 4, listNuisPars.getSize() )
+      c3 = ROOT.TCanvas(pF["id"]+"_extraPlots", pF["id"]+"_extraPlots", 4800, 3200)
+      c3.Divide( 5, listNuisPars.getSize() )
       cont = []
       # draw a scatter plot of chain results for poi vs each nuisance parameters
       for i in range( listNuisPars.getSize() ):
-         c3.cd( i*4 + 1 )
+         c3.cd( i*5 + 1 )
          plot.DrawChainScatter( firstPOI, listNuisPars.at(i) )
 
-         c3.cd( i*4 + 2 )
+         c3.cd( i*5 + 2 )
          h4 = plot.GetMinNLLHist1D( listNuisPars.at(i) )
          if h4.GetMaximum() > 15: h4.SetMaximum( 15 )
          h4.Draw( "HIST" )
          cont.append( h4 )
 
-         c3.cd( i*4 + 3 )
+         c3.cd( i*5 + 3 )
          h2 = plot.GetHist1D( listNuisPars.at(i) )
          h2.SetTitle( "Comparison of Posterior (red) and Likelihood Shape (blue)" )
          h2.GetYaxis().SetTitle( "Posterior (red) / Likelihood Shape (blue)" )
@@ -203,7 +194,7 @@ def main():
          cont.append( h3 )
          c3.Update()
 
-         c3.cd( i*4 + 4 )
+         c3.cd( i*5 + 4 )
          h1 = plot.GetMinNLLHist2D( firstPOI, listNuisPars.at(i) )
          cont.append( h1 )
          cont68Profile = getContours( h1, 2.3/2.0, c3 )
@@ -211,32 +202,43 @@ def main():
          cont.append( cont68Profile+cont95Profile )
 
          h5 = plot.GetHist2D( firstPOI, listNuisPars.at(i) )
-         h5.SetTitle( "Comparison of Posterior (red) and Likelihood Shape (blue)" )
-         h5.GetZaxis().SetTitle( "Posterior (red) / Likelihood Shape (blue)" )
+         h5.SetTitle( "Comparison of Posterior Contours (red) and NLL Contours (blue)" )
+         h5.GetZaxis().SetTitle( "Posterior Contours (red) / NLL Contours (blue)" )
          cont.append( h5 )
-         cont68Marginalized = getContours( h5, contourLevel(h5,0.68), c3 )
-         cont95Marginalized = getContours( h5, contourLevel(h5,0.95), c3 )
+         #cont68Marginalized = getContours( h5, contourLevel(h5,0.68), c3 )
+         #cont95Marginalized = getContours( h5, contourLevel(h5,0.95), c3 )
+         cont68Marginalized = getContours( h5, plot.ContourLevel(h5,0.68), c3 )
+         cont95Marginalized = getContours( h5, plot.ContourLevel(h5,0.95), c3 )
          cont.append( cont68Marginalized+cont95Marginalized )
 
          for c in cont68Profile:
-            c.SetLineWidth( 2 )
             c.SetLineColor( ROOT.kBlue )            
             c.Draw( "SAME" )
          for c in cont95Profile:
-            c.SetLineWidth( 1 )
+            c.SetLineStyle( ROOT.kDashed )
             c.SetLineColor( ROOT.kBlue )            
             c.Draw( "SAME" )
          for c in cont68Marginalized:
-            c.SetLineWidth( 2 )
             c.SetLineColor( ROOT.kRed )            
             c.Draw( "SAME" )
          for c in cont95Marginalized:
-            c.SetLineWidth( 1 )
+            c.SetLineStyle( ROOT.kDashed )
             c.SetLineColor( ROOT.kRed )            
             c.Draw( "SAME" )
 
+         c3.cd( i*5 + 5 )
+         h6 = plot.GetMaxLikelihoodHist2D( firstPOI, listNuisPars.at(i) )
+         h6.Scale( 1./h6.Integral() )
+         h6.Draw( "COLZ" )
+         cont.append( h6 )
+         c3.Update()
+
       c3.SaveAs( options.output+pF["id"]+"_extras.png" )
 
+      c4 = ROOT.TCanvas(pF["id"]+"_NLLTimeDev", pF["id"]+"_NLLTimeDev", 600, 400)
+      plot.DrawNLLVsTime()
+      c4.SaveAs( options.output+pF["id"]+"_NLLTimeDev.png" )
+      
 
 if __name__ == "__main__":
    main()
