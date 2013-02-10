@@ -890,7 +890,7 @@ TH2* MCMCIntervalPlot::GetMinNLLHist2D(RooRealVar& xVar, RooRealVar& yVar, bool 
 
    TString hName( "minNLLHist2D_" );
    hName += xVar.GetName();
-   hName += "_";
+   hName += "_Vs_";
    hName += yVar.GetName();
    TH2F *h = new TH2F( hName, "Minimum NLL per Bin",
       xVar.getBins(), xVar.getMin(), xVar.getMax(),
@@ -965,7 +965,7 @@ TH2* MCMCIntervalPlot::GetMaxLikelihoodHist2D(RooRealVar& xVar, RooRealVar& yVar
    TH2* h = GetMinNLLHist2D( xVar,yVar );
    TString hName( "maxLHist2D_" );
    hName += xVar.GetName();
-   hName += "_";
+   hName += "_Vs_";
    hName += yVar.GetName();
    h->SetName( hName );
    h->SetTitle( "Maximum Likelihood per Bin (subtracted)" );
