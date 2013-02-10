@@ -848,7 +848,7 @@ TH1* MCMCIntervalPlot::GetMinNLLHist1D(RooRealVar& xVar, bool subtractMinNLL)
    TString hName( "minNLLHist_" );
    hName += xVar.GetName();
    // This needs double precision when subtractMinNLL is not used
-   TH1D *h = new TH1F( hName, "Minimum NLL per Bin",
+   TH1D *h = new TH1D( hName, "Minimum NLL per Bin",
       xVar.getBins(), xVar.getMin(), xVar.getMax()
    );
    h->GetXaxis()->SetTitle( xVar.GetName() );
@@ -894,7 +894,7 @@ TH2* MCMCIntervalPlot::GetMinNLLHist2D(RooRealVar& xVar, RooRealVar& yVar, bool 
    hName += "_Vs_";
    hName += yVar.GetName();
    // This needs double precision when subtractMinNLL is not used
-   TH2D *h = new TH2F( hName, "Minimum NLL per Bin",
+   TH2D *h = new TH2D( hName, "Minimum NLL per Bin",
       xVar.getBins(), xVar.getMin(), xVar.getMax(),
       yVar.getBins(), yVar.getMin(), yVar.getMax()
    );
