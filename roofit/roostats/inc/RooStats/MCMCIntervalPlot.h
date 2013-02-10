@@ -80,6 +80,9 @@ namespace RooStats {
       TH2* GetHist2D(RooRealVar& xVar, RooRealVar& yVar);
 
       static double ContourLevel( TH1* h, double integralValue );      
+      static void HistMin( TH1* h1, TH1* h2 );
+      static TH1F* RebinHist1FMin( TH1F* h, int rebin );
+      static TH2F* RebinHist2FMin( TH2F* h, int rebin );
       
 
    private:

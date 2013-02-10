@@ -847,7 +847,8 @@ TH1* MCMCIntervalPlot::GetMinNLLHist1D(RooRealVar& xVar, bool subtractMinNLL)
 
    TString hName( "minNLLHist_" );
    hName += xVar.GetName();
-   TH1F *h = new TH1F( hName, "Minimum NLL per Bin",
+   // This needs double precision when subtractMinNLL is not used
+   TH1D *h = new TH1F( hName, "Minimum NLL per Bin",
       xVar.getBins(), xVar.getMin(), xVar.getMax()
    );
    h->GetXaxis()->SetTitle( xVar.GetName() );
@@ -892,7 +893,8 @@ TH2* MCMCIntervalPlot::GetMinNLLHist2D(RooRealVar& xVar, RooRealVar& yVar, bool 
    hName += xVar.GetName();
    hName += "_Vs_";
    hName += yVar.GetName();
-   TH2F *h = new TH2F( hName, "Minimum NLL per Bin",
+   // This needs double precision when subtractMinNLL is not used
+   TH2D *h = new TH2F( hName, "Minimum NLL per Bin",
       xVar.getBins(), xVar.getMin(), xVar.getMax(),
       yVar.getBins(), yVar.getMin(), yVar.getMax()
    );
@@ -1148,6 +1150,94 @@ double MCMCIntervalPlot::ContourLevel( TH1* h, double integralValue ) {
    }
    
    return 0.0;
+}
+
+void MCMCIntervalPlot::HistMin( TH1* h1, TH1* h2 ) {
+   int numBins1 = h1->GetNbinsX()+2;
+   if( h1->GetNbinsY() > 1 ) numBins1 *= h1->GetNbinsY()+2;
+   if( h1->GetNbinsZ() > 1 ) numBins1 *= h1->GetNbinsZ()+2;
+   int numBins2 = h2->GetNbinsX()+2;
+   if( h2->GetNbinsY() > 1 ) numBins2 *= h2->GetNbinsY()+2;
+   if( h2->GetNbinsZ() > 1 ) numBins2 *= h2->GetNbinsZ()+2;
+   
+   if( numBins2 != numBins1 ) {
+      std::cout << "ERROR MCMCIntervalPlot::HistMin(): histograms need to have the same dimensions." << std::endl; 
+      return;
+   }
+   
+   for( int i=0; i < numBins1; i++ ) {
+      if( h2->GetBinContent(i) < h1->GetBinContent(i) ) {
+         h1->SetBinContent( i, h2->GetBinContent(i) );
+      }
+   }
+}
+
+TH1F* MCMCIntervalPlot::RebinHist1FMin( TH1F* h, int rebin ) {
+   TH1F* hRebinned = new TH1F( 
+      h->GetName(), h->GetTitle(),
+      h->GetNbinsX()/rebin, h->GetXaxis()->GetXmin(), h->GetXaxis()->GetXmax()
+   );
+   
+   // nothing is smaller than min, so use min-1.0 as place holder for empty
+   double minOrig = h->GetMinimum();
+   for( int i=0; i < hRebinned->GetNbinsX()+2; i++ ) {
+      hRebinned->SetBinContent( i, minOrig-1.0 );
+   }
+
+   for( int x=0; x < h->GetNbinsX(); x++ ) {
+      int xRebinned = x/rebin;
+      int bin = x+1;
+      int binRebinned = xRebinned+1;
+      if( h->GetBinContent(bin) < hRebinned->GetBinContent(binRebinned) ||
+          hRebinned->GetBinContent(binRebinned) == minOrig-1.0
+      ) {
+         hRebinned->SetBinContent( binRebinned, h->GetBinContent(bin) );
+      }
+   }
+
+   for( int i=0; i < hRebinned->GetNbinsX()+2; i++ ) {
+      if( hRebinned->GetBinContent(i) == minOrig-1.0 ) {
+         hRebinned->SetBinContent( i, hRebinned->GetMaximum() );
+      }
+   }
+
+   return hRebinned;   
+}
+
+TH2F* MCMCIntervalPlot::RebinHist2FMin( TH2F* h, int rebin ) {
+   TH2F* hRebinned = new TH2F( 
+      TString(h->GetName())+"_rebinned", h->GetTitle(),
+      h->GetNbinsX()/rebin, h->GetXaxis()->GetXmin(), h->GetXaxis()->GetXmax(),
+      h->GetNbinsY()/rebin, h->GetYaxis()->GetXmin(), h->GetYaxis()->GetXmax()
+   );
+   
+   // nothing is smaller than min, so use min-1.0 as place holder for empty
+   double minOrig = h->GetMinimum();
+   for( int i=0; i < (hRebinned->GetNbinsX()+2)*(hRebinned->GetNbinsY()+2); i++ ) {
+      hRebinned->SetBinContent( i, minOrig-1.0 );
+   }
+
+   for( int x=0; x < h->GetNbinsX(); x++ ) {
+      for( int y=0; y < h->GetNbinsY(); y++ ) {
+         int xRebinned = x/rebin;
+         int yRebinned = y/rebin;
+         int bin = (y+1)*(h->GetNbinsY()+2) + (x+1);
+         int binRebinned = (yRebinned+1)*(hRebinned->GetNbinsY()+2) + (xRebinned+1);
+         if( h->GetBinContent(bin) < hRebinned->GetBinContent(binRebinned) ||
+             hRebinned->GetBinContent(binRebinned) == minOrig-1.0
+         ) {
+            hRebinned->SetBinContent( binRebinned, h->GetBinContent(bin) );
+         }
+      }
+   }
+
+   for( int i=0; i < (hRebinned->GetNbinsX()+2)*(hRebinned->GetNbinsY()+2); i++ ) {
+      if( hRebinned->GetBinContent(i) == minOrig-1.0 ) {
+         hRebinned->SetBinContent( i, hRebinned->GetMaximum() );
+      }
+   }
+
+   return hRebinned;   
 }
 
 
