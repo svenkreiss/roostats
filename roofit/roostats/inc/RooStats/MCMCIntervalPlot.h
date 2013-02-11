@@ -64,7 +64,7 @@ namespace RooStats {
       TGraph* GetChainScatterBurnIn(RooRealVar& xVar, RooRealVar& yVar);
       TGraph* GetChainScatterFirstPoint(RooRealVar& xVar, RooRealVar& yVar);
       void DrawChainScatter(RooRealVar& xVar, RooRealVar& yVar);
-      TGraph* GetParameterVsTime(RooRealVar& param);
+      TGraph* GetParameterVsTime(RooRealVar& param, int samplingPoints=-1);
       void DrawParameterVsTime(RooRealVar& param);
       void DrawNLLVsTime();
       void DrawNLLHist(const Option_t* options = NULL);

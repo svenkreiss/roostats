@@ -8,6 +8,12 @@ the middle column.<br />
 NLL time development.<br />
 ![seqProp_NLLVsTime](docImages/SequentialProposal_NLLTimeDev.png)
 
+Parameter time development (1000 sampling points).<br />
+![seqProp_POIVsTime_1000](docImages/SequentialProposal_POIVsTime_1000Samples.png)
+
+Parameter time development (all sampling points).<br />
+![seqProp_POIVsTime_all](docImages/SequentialProposal_POIVsTime_allSamples.png)
+
 
 # Sequential Proposal
 

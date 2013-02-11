@@ -985,24 +985,34 @@ TH1* MCMCIntervalPlot::MaxLFromNLLHist( TH1* nllHist ) {
 
 
 
-TGraph* MCMCIntervalPlot::GetParameterVsTime(RooRealVar& param)
+TGraph* MCMCIntervalPlot::GetParameterVsTime(RooRealVar& param, int samplingPoints)
 {
    const MarkovChain* markovChain = fInterval->GetChain();
    Int_t size = markovChain->Size();
-   Int_t numEntries = 2 * size;
+
+   if( samplingPoints == -1 ) samplingPoints = size;
+   
+   Int_t numEntries = 2 * samplingPoints;
    Double_t* value = new Double_t[numEntries];
    Double_t* time = new Double_t[numEntries];
-   Double_t val;
-   Int_t weight;
+
    Int_t t = 0;
+   Int_t iLastDownsampled = -1;
    for (Int_t i = 0; i < size; i++) {
-      val = markovChain->Get(i)->getRealValue(param.GetName());
-      weight = (Int_t)markovChain->Weight();
-      value[2*i] = val;
-      value[2*i + 1] = val;
-      time[2*i] = t;
+      Double_t val = markovChain->Get(i)->getRealValue(param.GetName());
+      Int_t weight = (Int_t)markovChain->Weight();
+
+      Int_t iDownsampled = floor(i * ((double)samplingPoints/(double)size));
+      if( iDownsampled >= iLastDownsampled ) {
+         value[2*iDownsampled] = val;
+         value[2*iDownsampled + 1] = val;
+         time[2*iDownsampled] = t;
+         time[2*iDownsampled + 1] = t+weight;
+         
+         iLastDownsampled = iDownsampled;
+      }
+
       t += weight;
-      time[2*i + 1] = t;
    }
 
    TString title(GetTitle());

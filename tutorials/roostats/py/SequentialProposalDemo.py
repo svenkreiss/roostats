@@ -222,6 +222,14 @@ def main():
       c4 = ROOT.TCanvas(pF["id"]+"_NLLTimeDev", pF["id"]+"_NLLTimeDev", 600, 400)
       plot.DrawNLLVsTime()
       c4.SaveAs( options.output+pF["id"]+"_NLLTimeDev.png" )
+
+      c5 = ROOT.TCanvas(pF["id"]+"_POIVsTime", pF["id"]+"_POIVsTime", 600, 400)
+      tgPOIVsTime = plot.GetParameterVsTime( firstPOI, 1000 )
+      tgPOIVsTime.Draw("AL")
+      c5.SaveAs( options.output+pF["id"]+"_POIVsTime_1000Samples.png" )
+      tgPOIVsTime = plot.GetParameterVsTime( firstPOI )
+      tgPOIVsTime.Draw("AL")
+      c5.SaveAs( options.output+pF["id"]+"_POIVsTime_allSamples.png" )
       
 
 if __name__ == "__main__":
