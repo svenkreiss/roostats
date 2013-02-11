@@ -941,21 +941,8 @@ TH1* MCMCIntervalPlot::GetMaxLikelihoodHist1D(RooRealVar& xVar)
    // and then take the exponential.
    
    TH1* h = GetMinNLLHist1D( xVar );
-   TString hName( "maxLHist1D_" );
-   hName += xVar.GetName();
-   h->SetName( hName );
-   h->SetTitle( "Maximum Likelihood per Bin (subtracted)" );
-   h->GetYaxis()->SetTitle( "Maximum Likelihood per Bin (subtracted)" );
-
-   for( int i=0; i < h->GetNbinsX()+2; i++ ) {
-      double newVal = exp(- h->GetBinContent(i));
-      //cout << "nll = " << h->GetBinContent(i) << "   L = " << newVal << endl;
-      h->SetBinContent( i, newVal );
-   }
-
-   return h;
+   return MaxLFromNLLHist( h );
 }
-
 
 
 TH2* MCMCIntervalPlot::GetMaxLikelihoodHist2D(RooRealVar& xVar, RooRealVar& yVar)
@@ -965,23 +952,35 @@ TH2* MCMCIntervalPlot::GetMaxLikelihoodHist2D(RooRealVar& xVar, RooRealVar& yVar
    // and then take the exponential.
    
    TH2* h = GetMinNLLHist2D( xVar,yVar );
-   TString hName( "maxLHist2D_" );
-   hName += xVar.GetName();
-   hName += "_Vs_";
-   hName += yVar.GetName();
-   h->SetName( hName );
-   h->SetTitle( "Maximum Likelihood per Bin (subtracted)" );
-   h->GetZaxis()->SetTitle( "Maximum Likelihood per Bin (subtracted)" );
-
-   for( int i=0; i < (h->GetNbinsX()+2)*(h->GetNbinsY()+2); i++ ) {
-      double newVal = exp(- h->GetBinContent(i));
-      //cout << "nll = " << h->GetBinContent(i) << "   L = " << newVal << endl;
-      h->SetBinContent( i, newVal );
-   }
-
-   return h;
+   return (TH2*)MaxLFromNLLHist( h );
 }
 
+TH1* MCMCIntervalPlot::MaxLFromNLLHist( TH1* nllHist ) {
+   TString maxLName( "maxLHist2D_" );
+   maxLName += nllHist->GetName();
+   
+   TH1* maxLHist = (TH1*)nllHist->Clone( maxLName );
+   
+   maxLHist->SetTitle( "Maximum Likelihood per Bin (subtracted)" );
+   if( maxLHist->GetDimension() == 1 )
+      maxLHist->GetYaxis()->SetTitle( "Maximum Likelihood per Bin (subtracted)" );
+   else if( maxLHist->GetDimension() == 2 )
+      maxLHist->GetZaxis()->SetTitle( "Maximum Likelihood per Bin (subtracted)" );
+   else
+      cout << "WARNING: not sure what to do with this histogram." << endl;
+
+   int numBins = maxLHist->GetNbinsX()+2;
+   if( maxLHist->GetDimension() >= 2 ) numBins *= maxLHist->GetNbinsY()+2;
+   if( maxLHist->GetDimension() >= 3 ) numBins *= maxLHist->GetNbinsZ()+2;
+   double minNLL = maxLHist->GetMinimum();
+   for( int i=0; i < numBins; i++ ) {
+      double newVal = exp(- (maxLHist->GetBinContent(i)-minNLL));
+      //cout << "nll = " << h->GetBinContent(i) << "   L = " << newVal << endl;
+      maxLHist->SetBinContent( i, newVal );
+   }
+
+   return maxLHist;
+}
 
 
 
@@ -1165,6 +1164,20 @@ void MCMCIntervalPlot::HistMin( TH1* h1, TH1* h2 ) {
       return;
    }
    
+   // Assume maximum in each histogram corresponds to unset bins.
+   // Therefore, raise max to the max of both histograms.
+   if( h1->GetMaximum() > h2->GetMaximum() ) {
+      double h2OldMax = h2->GetMaximum();
+      for( int i=0; i < numBins2; i++ ) {
+         if( h2->GetBinContent(i) == h2OldMax ) h2->SetBinContent( i, h1->GetMaximum() );
+      }
+   }else{
+      double h1OldMax = h1->GetMaximum();
+      for( int i=0; i < numBins2; i++ ) {
+         if( h1->GetBinContent(i) == h1OldMax ) h1->SetBinContent( i, h2->GetMaximum() );
+      }
+   }
+   
    for( int i=0; i < numBins1; i++ ) {
       if( h2->GetBinContent(i) < h1->GetBinContent(i) ) {
          h1->SetBinContent( i, h2->GetBinContent(i) );
@@ -1172,8 +1185,8 @@ void MCMCIntervalPlot::HistMin( TH1* h1, TH1* h2 ) {
    }
 }
 
-TH1F* MCMCIntervalPlot::RebinHist1FMin( TH1F* h, int rebin ) {
-   TH1F* hRebinned = new TH1F( 
+TH1D* MCMCIntervalPlot::RebinHist1DMin( TH1* h, int rebin ) {
+   TH1D* hRebinned = new TH1D( 
       h->GetName(), h->GetTitle(),
       h->GetNbinsX()/rebin, h->GetXaxis()->GetXmin(), h->GetXaxis()->GetXmax()
    );
@@ -1185,9 +1198,9 @@ TH1F* MCMCIntervalPlot::RebinHist1FMin( TH1F* h, int rebin ) {
    }
 
    for( int x=0; x < h->GetNbinsX(); x++ ) {
-      int xRebinned = x/rebin;
+      //int xRebinned = floor(x/rebin);
       int bin = x+1;
-      int binRebinned = xRebinned+1;
+      int binRebinned = hRebinned->FindBin( h->GetBinCenter(bin) ); //xRebinned+1;
       if( h->GetBinContent(bin) < hRebinned->GetBinContent(binRebinned) ||
           hRebinned->GetBinContent(binRebinned) == minOrig-1.0
       ) {
@@ -1204,8 +1217,8 @@ TH1F* MCMCIntervalPlot::RebinHist1FMin( TH1F* h, int rebin ) {
    return hRebinned;   
 }
 
-TH2F* MCMCIntervalPlot::RebinHist2FMin( TH2F* h, int rebin ) {
-   TH2F* hRebinned = new TH2F( 
+TH2D* MCMCIntervalPlot::RebinHist2DMin( TH2* h, int rebin ) {
+   TH2D* hRebinned = new TH2D( 
       TString(h->GetName())+"_rebinned", h->GetTitle(),
       h->GetNbinsX()/rebin, h->GetXaxis()->GetXmin(), h->GetXaxis()->GetXmax(),
       h->GetNbinsY()/rebin, h->GetYaxis()->GetXmin(), h->GetYaxis()->GetXmax()
