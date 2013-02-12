@@ -1025,54 +1025,67 @@ TGraph* MCMCIntervalPlot::GetParameterVsTime(RooRealVar& param, int samplingPoin
       paramGraph->SetTitle(GetTitle());
    paramGraph->GetXaxis()->SetTitle("Time (discrete steps)");
    paramGraph->GetYaxis()->SetTitle(param.GetName());
-   //paramGraph->SetLineColor(fLineColor);
-   //paramGraph->Draw("A,L,same");
    delete [] value; 
    delete [] time; 
-   //gPad->Update();
    
    return paramGraph;
 }
-void MCMCIntervalPlot::DrawParameterVsTime(RooRealVar& param)
+void MCMCIntervalPlot::DrawParameterVsTime(RooRealVar& param, int samplingPoints)
 {
-   GetParameterVsTime(param)->Draw("A,L,same");
+   GetParameterVsTime(param, samplingPoints)->Draw("A,L,same");
 }
 
-void MCMCIntervalPlot::DrawNLLVsTime()
+
+
+
+TGraph* MCMCIntervalPlot::GetNLLVsTime(int samplingPoints)
 {
    const MarkovChain* markovChain = fInterval->GetChain();
    Int_t size = markovChain->Size();
-   Int_t numEntries = 2 * size;
-   Double_t* nllValue = new Double_t[numEntries];
+
+   if( samplingPoints == -1 ) samplingPoints = size;
+   
+   Int_t numEntries = 2 * samplingPoints;
+   Double_t* value = new Double_t[numEntries];
    Double_t* time = new Double_t[numEntries];
-   Double_t nll;
-   Int_t weight;
+
    Int_t t = 0;
+   Int_t iLastDownsampled = -1;
    for (Int_t i = 0; i < size; i++) {
-      nll = markovChain->NLL(i);
-      weight = (Int_t)markovChain->Weight();
-      nllValue[2*i] = nll;
-      nllValue[2*i + 1] = nll;
-      time[2*i] = t;
+      Double_t val = markovChain->NLL(i);
+      Int_t weight = (Int_t)markovChain->Weight();
+
+      Int_t iDownsampled = floor(i * ((double)samplingPoints/(double)size));
+      if( iDownsampled >= iLastDownsampled ) {
+         value[2*iDownsampled] = val;
+         value[2*iDownsampled + 1] = val;
+         time[2*iDownsampled] = t;
+         time[2*iDownsampled + 1] = t+weight;
+         
+         iLastDownsampled = iDownsampled;
+      }
+
       t += weight;
-      time[2*i + 1] = t;
    }
 
    TString title(GetTitle());
    Bool_t isEmpty = (title.CompareTo("") == 0);
 
-   TGraph* nllGraph = new TGraph(numEntries, time, nllValue);
+   TGraph* nllGraph = new TGraph(numEntries, time, value);
    if (isEmpty)
       nllGraph->SetTitle("NLL value vs. time in Markov chain");
    else
       nllGraph->SetTitle(GetTitle());
    nllGraph->GetXaxis()->SetTitle("Time (discrete steps)");
    nllGraph->GetYaxis()->SetTitle("NLL (-log(likelihood))");
-   //nllGraph->SetLineColor(fLineColor);
-   nllGraph->Draw("A,L,same");
-   //gPad->Update();
-   delete [] nllValue; 
+   delete [] value; 
    delete [] time; 
+   
+   return nllGraph;
+}
+void MCMCIntervalPlot::DrawNLLVsTime(int samplingPoints)
+{
+   GetNLLVsTime(samplingPoints)->Draw("A,L,same");
 }
 
 void MCMCIntervalPlot::DrawNLLHist(const Option_t* options)
