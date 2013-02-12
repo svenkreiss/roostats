@@ -178,7 +178,6 @@ def main():
 
    ##### Script starts here
    
-   for p in range( poiL.getSize() ): poiL.at(p).setConstant()
 
    #ROOT.RooAbsReal.defaultIntegratorConfig().method1D().setLabel("RooAdaptiveGaussKronrodIntegrator1D")
 
@@ -201,6 +200,13 @@ def main():
    print( "Total grid points: "+str(numPoints) )
    firstBin,lastBin = jobBins( numPoints )
 
+   # unconditional fit
+   for p in range( poiL.getSize() ): poiL.at(p).setConstant(False)
+   minimize( nll )
+   print( "ucmles -- nll="+str(nll.getVal())+", "+", ".join( [poiL.at(p).GetName()+"="+str(poiL.at(p).getVal()) for p in range(poiL.getSize())] ) )
+
+   # conditional fits
+   for p in range( poiL.getSize() ): poiL.at(p).setConstant()
    for i in range( firstBin,lastBin ):
       parametersNCube( poiL, i )
       print( "" )
