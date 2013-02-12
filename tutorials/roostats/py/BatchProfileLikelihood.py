@@ -83,8 +83,8 @@ def visualizeEnumeration( poiL ):
       numbers.SetBinContent( numbers.FindBin( poiL.at(0).getVal(), poiL.at(1).getVal() ), i )
       jobs.SetBinContent( jobs.FindBin( poiL.at(0).getVal(), poiL.at(1).getVal() ), int(float(i)/numPoints*options.jobs) )
 
-   firstBin,lastBin = jobBins( numPoints )
-   for i in range( firstBin,lastBin ):
+   firstPoint,lastPoint = jobBins( numPoints )
+   for i in range( firstPoint,lastPoint ):
       parametersNCube( poiL, i )
       jobsMask.SetBinContent(
          jobsMask.FindBin( poiL.at(0).getVal(), poiL.at(1).getVal() ),
@@ -197,8 +197,24 @@ def main():
 
       
    numPoints = reduce( lambda x,y: x*y, [poiL.at(d).getBins() for d in range(poiL.getSize())] )
-   print( "Total grid points: "+str(numPoints) )
-   firstBin,lastBin = jobBins( numPoints )
+   firstPoint,lastPoint = jobBins( numPoints )
+   print( "" )
+   print( "# Batch Job" )
+   print( "" )
+   print( "* Total grid points: "+str(numPoints) )
+   print( "* Total number of jobs: "+str(options.jobs) )
+   print( "* This job number: "+str(options.counter) )
+   print( "* Processing these grid points: [%d,%d]" % (firstPoint,lastPoint) )
+   print( "" )
+   print( "" )
+
+   # for later plotting, print some book-keeping info
+   print( "# Parameters Of Interest" )
+   print( "" )
+   for p in range( poiL.getSize() ):
+      print( "* POI "+ ("%s=[%d,%f,%f]" % (poiL.at(p).GetName(),poiL.at(p).getBins(),poiL.at(p).getMin(),poiL.at(p).getMax())) )
+   print( "" )
+   print( "" )
 
    # unconditional fit
    for p in range( poiL.getSize() ): poiL.at(p).setConstant(False)
@@ -207,7 +223,7 @@ def main():
 
    # conditional fits
    for p in range( poiL.getSize() ): poiL.at(p).setConstant()
-   for i in range( firstBin,lastBin ):
+   for i in range( firstPoint,lastPoint ):
       parametersNCube( poiL, i )
       print( "" )
       print( "--- next point ---" )
