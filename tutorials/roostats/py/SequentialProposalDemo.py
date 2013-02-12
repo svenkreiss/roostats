@@ -219,7 +219,7 @@ def main():
 
       c3.SaveAs( options.output+pF["id"]+"_extras.png" )
 
-      c4 = ROOT.TCanvas(pF["id"]+"_NLLTimeDev", pF["id"]+"_NLLTimeDev", 600, 400)
+      c4 = ROOT.TCanvas(pF["id"]+"_NLLTimeDev", pF["id"]+"_NLLTimeDev", 400, 400)
       tgNLLVsTime = plot.GetNLLVsTime( 1000 )
       tgNLLVsTime.Draw("AL")
       c4.SaveAs( options.output+pF["id"]+"_NLLTimeDev_1000Samples.png" )
@@ -227,7 +227,7 @@ def main():
       tgNLLVsTime.Draw("AL")
       c4.SaveAs( options.output+pF["id"]+"_NLLTimeDev_allSamples.png" )
 
-      c5 = ROOT.TCanvas(pF["id"]+"_POIVsTime", pF["id"]+"_POIVsTime", 600, 400)
+      c5 = ROOT.TCanvas(pF["id"]+"_POIVsTime", pF["id"]+"_POIVsTime", 400, 400)
       tgPOIVsTime = plot.GetParameterVsTime( firstPOI, 1000 )
       tgPOIVsTime.Draw("AL")
       c5.SaveAs( options.output+pF["id"]+"_POIVsTime_1000Samples.png" )

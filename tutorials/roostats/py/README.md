@@ -5,16 +5,12 @@ This includes a comparison of the Posterior and the profile Likelihood shape in
 the middle column.<br />
 ![seqProp_extras](docImages/SequentialProposal_extras.png)
 
-NLL time development (1000 sampling points).<br />
+NLL time development with 1000 sampling points (left) and all sampling points (right).<br />
 ![seqProp_NLLVsTime_1000](docImages/SequentialProposal_NLLTimeDev_1000Samples.png)
-
-NLL time development (all sampling points).<br />
 ![seqProp_NLLVsTime_all](docImages/SequentialProposal_NLLTimeDev_allSamples.png)
 
-Parameter time development (1000 sampling points).<br />
+Parameter time development with 1000 sampling points (left) and all sampling points (right).<br />
 ![seqProp_POIVsTime_1000](docImages/SequentialProposal_POIVsTime_1000Samples.png)
-
-Parameter time development (all sampling points).<br />
 ![seqProp_POIVsTime_all](docImages/SequentialProposal_POIVsTime_allSamples.png)
 
 
