@@ -17,15 +17,11 @@ __version__ = "0.1"
 
 
 import optparse
+import helperModifyModelConfig
 
 parser = optparse.OptionParser(version="0.1")
-parser.add_option("-i", "--inputFile", help="root file", type="string", dest="fileName", default="")
-parser.add_option("-w", "--wsName", help="ws name", type="string", dest="wsName", default="combined")
-parser.add_option("-m", "--mcName", help="mc name", type="string", dest="mcName", default="ModelConfig")
-parser.add_option("-d", "--dataName", help="data name", type="string", dest="dataName", default="obsData")
+helperModifyModelConfig.addOptionsToOptParse( parser )
 parser.add_option("-n", "--nToys", help="number of toys", type="int", dest="nToys", default=1)
-parser.add_option(      "--overwritePOI", help="Force to take comma separated list of parameters with value for poi. Example: \"mu=1,mH=125\" will make these two the poi.", dest="overwritePOI", default=False )
-parser.add_option(      "--overwriteRange", help="Overwrite range. Example: \"mu=[-5:10],mH=[120:130]\".", dest="overwriteRange", default=False )
 parser.add_option(      "--proof", help="enable parallel proof processing: use \"\" for local proof-lite", dest="proof", default=None )
 parser.add_option(      "--detailedOutput", help="enable detailed output", dest="detailedOutput", default=False, action="store_true" )
 parser.add_option(      "--addSimpleLikelihoodRatioTestStat", help="add SLRTS with defined POIs for the alt hypothesis. Example: \"mu=1,mH=126\"", dest="addSimpleLikelihoodRatioTestStat", default=False )
@@ -50,56 +46,7 @@ def main():
    mc = w.obj( options.mcName )
    data = w.data( options.dataName )
 
-   if options.overwriteRange:
-      parAndRange = options.overwriteRange.split(",")
-      for pr in parAndRange:
-         p,r = pr.split("=")
-         r = r.split(":")
-         rMin = float( r[0][1:] )
-         rMax = float( r[1][:-1] )
-         
-         print( "Setting range for "+p+"=["+str(rMin)+","+str(rMax)+"]" )
-         w.var( p ).setRange( rMin, rMax )
-
-   if options.overwritePOI:
-      print( "" )
-      print( "=== Using given set for POI ===" )
-      poiAndValue = {}
-      pvs = options.overwritePOI.split(",")
-      for pv in pvs:
-         name,value = pv.split("=")
-         poiAndValue[ name ] = float( value )
-      
-      remove = []
-      poiL = ROOT.RooArgList( mc.GetParametersOfInterest() )
-      for p in range( poiL.getSize() ):
-         name = poiL.at(p).GetName()
-         if name not in poiAndValue.keys():
-            print( "Adding "+name+"["+str(poiL.at(p).getMin())+","+str(poiL.at(p).getMax())+"] to nuisance parameters." )
-            w.set( mc.GetName()+"_NuisParams" ).add( poiL.at(p) )
-            remove.append( name )
-#          else:
-#             print( "Setting value of POI "+name+"="+str(poiAndValue[name])+"." )
-
-      for r in remove: poiL.remove( w.var(r) )
-            
-      for p,v in poiAndValue.iteritems():
-         if not poiL.contains( w.var(p) ):
-            print( "Adding "+p+"="+str(v)+" to POI." )
-            poiL.add( w.var(p) )
-            w.var(p).setVal( v )
-         else:
-            print( "Setting value of POI "+p+"="+str(v)+"." )
-            w.var(p).setVal( v )
-            
-      print( "Setting new POI and new snapshot for ModelConfig: " )
-      mc.SetParametersOfInterest( ROOT.RooArgSet(poiL) )
-      mc.SetSnapshot( ROOT.RooArgSet(poiL) )
-      mc.GetSnapshot().Print("V")
-      print( "" )
-      print( "" )
-      
-      
+   helperModifyModelConfig.apply( options, w, mc )
    
 
    poiL = ROOT.RooArgList( mc.GetParametersOfInterest() )

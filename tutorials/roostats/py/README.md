@@ -34,3 +34,18 @@ And oversampling=10.<br />
 ![seqProp_extras](docImages/SequentialProposal_10_10_POIAndFirstNuisParWalk.png)
 
 Work in progress.
+
+
+
+# Batch Processing Tools
+
+This shows a grid constructed from the parameters of interest and the bins set for 
+these parameters. The algorithm is completely general and works for n parameters.
+On the right, it shows the job number for every grid point for a given total number 
+of jobs (in this case 16).
+You can reproduce this with
+```
+python BatchProfileLikelihood.py --overwritePOI=SigXsecOverSM=1,alpha_syst2=0 --overwriteBins=SigXsecOverSM=6,alpha_syst2=10 -f -j 16
+```
+![binEnumeration](docImages/binEnumeration2D.png)
+
