@@ -204,7 +204,7 @@ def main():
    print( "* Total grid points: "+str(numPoints) )
    print( "* Total number of jobs: "+str(options.jobs) )
    print( "* This job number: "+str(options.counter) )
-   print( "* Processing these grid points: [%d,%d]" % (firstPoint,lastPoint) )
+   print( "* Processing these grid points: [%d,%d)" % (firstPoint,lastPoint) )
    print( "" )
    print( "" )
 

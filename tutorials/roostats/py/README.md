@@ -54,7 +54,7 @@ For book-keeping and later plotting setup, it prints this at the beginning:
 * Total grid points: 60
 * Total number of jobs: 16
 * This job number: 14
-* Processing these grid points: [53,57]
+* Processing these grid points: [53,57)
 
 
 # Parameters Of Interest
