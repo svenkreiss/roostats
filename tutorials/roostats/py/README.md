@@ -71,3 +71,22 @@ And then it starts looping of the grid points.
 
 ![binEnumeration](docImages/binEnumeration2D.png)
 
+
+# 1D plots
+
+Produce sample log file:
+```
+python BatchProfileLikelihood.py --overwritePOI=SigXsecOverSM=1 --overwriteBins=SigXsecOverSM=100 -j 1 -c 0 -q | tee BatchProfileLikelihoodSampleLog1D.txt
+```
+
+And create plots:
+```
+ython BatchProfileLikelihoodPlot.py -i BatchProfileLikelihoodSampleLog1D.txt --subtractMinNLL
+```
+The argument to "-i" can be a glob expression to log files (add quotes). Use "-q" to 
+suppress drawing and saving of the png image.
+
+![pl1D](docImages/batchProfileLikelihood1D.png)
+
+
+

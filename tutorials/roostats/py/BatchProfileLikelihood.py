@@ -79,7 +79,7 @@ def visualizeEnumeration( poiL ):
       poiL.at(0).getBins(), poiL.at(0).getMin(), poiL.at(0).getMax(),
       poiL.at(1).getBins(), poiL.at(1).getMin(), poiL.at(1).getMax(),
    )
-   jobsMask = ROOT.TH2F( "jobsVis", "visualize jobs highlighting job "+str(options.counter)+";"+poiL.at(0).GetTitle()+";"+poiL.at(1).GetTitle(), 
+   jobsMask = ROOT.TH2F( "jobsMask", "visualize jobs highlighting job "+str(options.counter)+";"+poiL.at(0).GetTitle()+";"+poiL.at(1).GetTitle(), 
       poiL.at(0).getBins(), poiL.at(0).getMin(), poiL.at(0).getMax(),
       poiL.at(1).getBins(), poiL.at(1).getMin(), poiL.at(1).getMax(),
    )
@@ -110,7 +110,7 @@ def visualizeEnumeration( poiL ):
    jobs.Draw("TEXT,SAME")
    canvas.SaveAs( "docImages/binEnumeration2D.png" )
    canvas.Update()
-   raw_input( "finished bin enum plot. Press enter ..." )
+   raw_input( "Press enter to continue ..." )
 
 
 
@@ -193,11 +193,10 @@ def main():
    #ROOT.RooAbsReal.defaultIntegratorConfig().method1D().setLabel("RooAdaptiveGaussKronrodIntegrator1D")
 
    ROOT.Math.MinimizerOptions.SetDefaultMinimizer("Minuit2")
-   ROOT.Math.MinimizerOptions.SetDefaultStrategy(1)
+   ROOT.Math.MinimizerOptions.SetDefaultStrategy(0)
    #ROOT.Math.MinimizerOptions.SetDefaultPrintLevel(1)
    ROOT.Math.MinimizerOptions.SetDefaultPrintLevel(-1)
    #ROOT.Math.MinimizerOptions.SetDefaultTolerance(0.0001)
-   #ROOT.RooMinimizer.SetMaxFunctionCalls(10000)
 
    params = mc.GetPdf().getParameters(data)
    ROOT.RooStats.RemoveConstantParameters(params)
@@ -232,6 +231,8 @@ def main():
    if (not options.unconditionalFitInSeparateJob) or \
       (options.unconditionalFitInSeparateJob and options.counter == options.jobs):
       for p in range( poiL.getSize() ): poiL.at(p).setConstant(False)
+      print( "" )
+      print( "--- unconditional fit ---" )
       minimize( nll )
       print( "ucmles -- nll="+str(nll.getVal())+", "+", ".join( [poiL.at(p).GetName()+"="+str(poiL.at(p).getVal()) for p in range(poiL.getSize())] ) )
 
@@ -240,9 +241,8 @@ def main():
    for i in range( firstPoint,lastPoint ):
       parametersNCube( poiL, i )
       print( "" )
-      print( "--- next point ---" )
+      print( "--- next point: "+str(i)+" ---" )
       print( "Parameters Of Interest: "+str([ poiL.at(p).getVal() for p in range(poiL.getSize()) ]) )
-   
       minimize( nll )
       print( "nll="+str(nll.getVal())+", "+", ".join( [poiL.at(p).GetName()+"="+str(poiL.at(p).getVal()) for p in range(poiL.getSize())] ) )
       
