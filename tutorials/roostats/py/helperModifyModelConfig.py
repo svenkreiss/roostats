@@ -74,8 +74,6 @@ def apply( options, w, mc ):
       mc.SetSnapshot( ROOT.RooArgSet(poiL) )
       mc.GetSnapshot().Print("V")
       print( "" )
-      mc.Print()
-      print( "" )
       print( "" )
       
       

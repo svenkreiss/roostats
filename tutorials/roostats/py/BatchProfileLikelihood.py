@@ -114,13 +114,17 @@ def minimize( nll ):
    
    strat = ROOT.Math.MinimizerOptions.DefaultStrategy()
 
-   minim = ROOT.RooMinimizer( nll )
-   minim.setStrategy(strat)
-   minim.setPrintLevel(1)
-   minim.optimizeConst(2)
-
    msglevel = ROOT.RooMsgService.instance().globalKillBelow()
-   #ROOT.RooMsgService.instance().setGlobalKillBelow(ROOT.RooFit.WARNING)
+   if not options.verbose:
+      ROOT.RooMsgService.instance().setGlobalKillBelow(ROOT.RooFit.ERROR)
+
+   minim = ROOT.RooMinimizer( nll )
+   if not options.verbose:
+      minim.setPrintLevel(-1)
+   else:
+      minim.setPrintLevel(1)
+   minim.setStrategy(strat)
+   minim.optimizeConst(0)
 
    # Got to be very careful with SCAN. We have to allow for negative mu,
    # so large part of the space that is scanned produces log-eval errors.
