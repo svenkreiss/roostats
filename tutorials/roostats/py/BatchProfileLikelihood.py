@@ -27,9 +27,13 @@ parser.add_option("-c", "--counter", help="Number of this job.", dest="counter",
 parser.add_option("-j", "--jobs", help="Number of jobs.", dest="jobs", type="int", default=1)
 
 parser.add_option("-f", "--fullRun", help="Do a full run.", dest="fullRun", default=False, action="store_true")
+parser.add_option(      "--unconditionalFitInSeparateJob", help="Do the unconditional fit in a separate job", dest="unconditionalFitInSeparateJob", default=False, action="store_true")
 
 parser.add_option("-q", "--quiet", dest="verbose", action="store_false", default=True, help="Quiet output.")
 options,args = parser.parse_args()
+
+# to calculate unconditionalFitInSeparateJob, reduce options.jobs by one to make room for the extra job
+if options.unconditionalFitInSeparateJob: options.jobs -= 1
 
 
 import ROOT
@@ -54,6 +58,9 @@ def parametersNCube( parL, i ):
          setParameterToBin( parL.at(d), i )
          
 def jobBins( numPoints ):
+   if options.unconditionalFitInSeparateJob and options.counter == options.jobs:
+      return (0,0)
+
    return (
       int(math.ceil(float(options.counter)*numPoints/options.jobs)),
       int(math.ceil(float(options.counter+1.0)*numPoints/options.jobs))
@@ -207,6 +214,7 @@ def main():
    print( "" )
    print( "* Total grid points: "+str(numPoints) )
    print( "* Total number of jobs: "+str(options.jobs) )
+   print( "* Calculate unconditional fit in separate job: "+str(options.unconditionalFitInSeparateJob) )
    print( "* This job number: "+str(options.counter) )
    print( "* Processing these grid points: [%d,%d)" % (firstPoint,lastPoint) )
    print( "" )
@@ -221,9 +229,11 @@ def main():
    print( "" )
 
    # unconditional fit
-   for p in range( poiL.getSize() ): poiL.at(p).setConstant(False)
-   minimize( nll )
-   print( "ucmles -- nll="+str(nll.getVal())+", "+", ".join( [poiL.at(p).GetName()+"="+str(poiL.at(p).getVal()) for p in range(poiL.getSize())] ) )
+   if (not options.unconditionalFitInSeparateJob) or \
+      (options.unconditionalFitInSeparateJob and options.counter == options.jobs):
+      for p in range( poiL.getSize() ): poiL.at(p).setConstant(False)
+      minimize( nll )
+      print( "ucmles -- nll="+str(nll.getVal())+", "+", ".join( [poiL.at(p).GetName()+"="+str(poiL.at(p).getVal()) for p in range(poiL.getSize())] ) )
 
    # conditional fits
    for p in range( poiL.getSize() ): poiL.at(p).setConstant()
