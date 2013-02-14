@@ -81,7 +81,7 @@ python BatchProfileLikelihood.py --overwritePOI=SigXsecOverSM=1 --overwriteBins=
 
 And create plots:
 ```
-ython BatchProfileLikelihoodPlot.py -i BatchProfileLikelihoodSampleLog1D.txt --subtractMinNLL
+python BatchProfileLikelihoodPlot.py -i BatchProfileLikelihoodSampleLog1D.txt --subtractMinNLL
 ```
 The argument to "-i" can be a glob expression to log files (add quotes). Use "-q" to 
 suppress drawing and saving of the png image.
