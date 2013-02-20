@@ -243,12 +243,16 @@ class Band( ROOT.TGraph ):
       
       
 
-def DrawLine( x1,y1,x2,y2, lineWidth=None, lineStyle=None, lineColor=None ):
+def DrawLine( x1,y1,x2,y2, lineWidth=None, lineStyle=None, lineColor=None, NDC=False ):
    l = ROOT.TLine( x1,y1,x2,y2 )
    if lineWidth: l.SetLineWidth( lineWidth )
    if lineStyle: l.SetLineStyle( lineStyle )
    if lineColor: l.SetLineColor( lineColor )
-   l.Draw()
+   
+   if NDC:
+      l.DrawLineNDC( x1,y1,x2,y2 )
+   else:
+      l.Draw()
    
    return l
 
@@ -284,5 +288,11 @@ def DrawText( x, y, text, textColor = 1, textSize = 0.04, NDC = True, halign = "
       
    return objs
 
+def DrawTextAligned( x,y, textList, halignList=["right","center","left"], textColor = 1, textSize = 0.04, NDC = True, valign="bottom" ):
+   """ use to write a = b and c = d under each other with the equal signs aligned """
+   objs = []
+   for text,halign in zip( textList, halignList ):
+      objs.append( DrawText( x,y, text, textColor, textSize, NDC, halign, valign ) )
+   return objs
 
 
