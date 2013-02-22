@@ -256,6 +256,14 @@ def DrawLine( x1,y1,x2,y2, lineWidth=None, lineStyle=None, lineColor=None, NDC=F
    
    return l
 
+def DrawHLine( y, lineWidth=None, lineStyle=None, lineColor=None ):
+   x1,y1,x2,y2 = ( ROOT.Double(),ROOT.Double(),ROOT.Double(),ROOT.Double() )
+   ROOT.gPad.GetRangeAxis( x1,y1, x2,y2 )
+   return DrawLine(
+      x1,y, x2,y,
+      lineWidth, lineStyle, lineColor,
+   )
+
 
 def DrawTextOneLine( x, y, text, textColor = 1, textSize = 0.04, NDC = True, halign = "left", valign = "bottom", skipLines = 0 ):
    """ This is just a helper. Don't use. Use DrawText instead. """
