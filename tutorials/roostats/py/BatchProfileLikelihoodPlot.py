@@ -85,17 +85,21 @@ def main():
       if options.subtractMinNLL: val -= minNLL
       if nllHist.GetBinContent( bin ) > val: nllHist.SetBinContent( bin, val )
 
-   # create tgraph
+   # create tgraphs
    nllTGraph = None
+   twoNllTGraph = None
    lTGraph = None
    if len( POIs ) == 1:
       xNll = []
+      xTwoNll = []
       xL = []
       for b in range(nllHist.GetNbinsX()):
          if nllHist.GetBinContent( b+1 ) != maxHist:
             xNll.append( (nllHist.GetBinCenter(b+1), nllHist.GetBinContent(b+1)) )
+            xTwoNll.append( (nllHist.GetBinCenter(b+1), 2.0*nllHist.GetBinContent(b+1)) )
             xL.append( (nllHist.GetBinCenter(b+1), math.exp(-nllHist.GetBinContent(b+1))) )
       nllTGraph = PyROOTUtils.Graph( xNll )
+      twoNllTGraph = PyROOTUtils.Graph( xTwoNll )
       lTGraph = PyROOTUtils.Graph( xL )
 
 
@@ -105,6 +109,7 @@ def main():
    f = ROOT.TFile( options.outputFile, "RECREATE" )
    nllHist.Write()
    if nllTGraph: nllTGraph.Write( "nllTGraph" )
+   if twoNllTGraph: twoNllTGraph.Write( "twoNllTGraph" )
    if lTGraph: lTGraph.Write( "lTGraph" )
    #bestFitMarker.Write("bestFit")
    f.Close()
