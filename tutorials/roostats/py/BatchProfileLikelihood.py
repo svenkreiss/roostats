@@ -200,7 +200,7 @@ def main():
 
    params = mc.GetPdf().getParameters(data)
    ROOT.RooStats.RemoveConstantParameters(params)
-   nll = mc.GetPdf().createNLL(data, ROOT.RooFit.CloneData(ROOT.kFALSE), ROOT.RooFit.Constrain(params))
+   nll = mc.GetPdf().createNLL(data, ROOT.RooFit.CloneData(ROOT.kFALSE), ROOT.RooFit.Constrain(params), ROOT.RooFit.Offset(True))
    nll.setEvalErrorLoggingMode(ROOT.RooAbsReal.CountErrors)
 
 
