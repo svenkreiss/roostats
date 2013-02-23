@@ -190,19 +190,26 @@ def main():
    ##### Script starts here
    
 
-   #ROOT.RooAbsReal.defaultIntegratorConfig().method1D().setLabel("RooAdaptiveGaussKronrodIntegrator1D")
+   ROOT.RooAbsReal.defaultIntegratorConfig().method1D().setLabel("RooAdaptiveGaussKronrodIntegrator1D")
 
    ROOT.Math.MinimizerOptions.SetDefaultMinimizer("Minuit2")
-   ROOT.Math.MinimizerOptions.SetDefaultStrategy(0)
+   ROOT.Math.MinimizerOptions.SetDefaultStrategy(1)
    #ROOT.Math.MinimizerOptions.SetDefaultPrintLevel(1)
    ROOT.Math.MinimizerOptions.SetDefaultPrintLevel(-1)
    #ROOT.Math.MinimizerOptions.SetDefaultTolerance(0.0001)
 
    params = mc.GetPdf().getParameters(data)
    ROOT.RooStats.RemoveConstantParameters(params)
-   nll = mc.GetPdf().createNLL(data, ROOT.RooFit.CloneData(ROOT.kFALSE), ROOT.RooFit.Constrain(params), ROOT.RooFit.Offset(True))
+   nll = mc.GetPdf().createNLL(
+      data, 
+      ROOT.RooFit.CloneData(ROOT.kFALSE), 
+      ROOT.RooFit.Constrain(params), 
+      ROOT.RooFit.Offset(True),
+   )
    nll.setEvalErrorLoggingMode(ROOT.RooAbsReal.CountErrors)
-
+   print( "Get NLL once. This first call sets the offset, so it is important that this happens when the parameters are at their initial values." )
+   print( "nll = "+str( nll.getVal() ) )
+   print( "" )
 
 
       

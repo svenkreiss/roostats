@@ -11,7 +11,7 @@ __version__ = "0.1"
 import optparse
 
 parser = optparse.OptionParser(version="0.1")
-parser.add_option("-i", "--inputFiles", help="glob expression for log files from BatchProfileLikelihood.py", type="string", dest="inputFiles", default="")
+parser.add_option("-i", "--inputFiles", help="glob expression for log files from BatchProfileLikelihood.py", type="string", dest="inputFiles", default="batchProfile.log")
 parser.add_option("-o", "--outputFile", help="output root file", type="string", dest="outputFile", default="PL_data.root")
 parser.add_option(      "--subtractMinNLL", help="subtracts the minNLL", dest="subtractMinNLL", default=False, action="store_true")
 parser.add_option("-q", "--quiet", dest="verbose", action="store_false", default=True, help="Quiet output.")
@@ -58,8 +58,8 @@ def main():
 
    print( "\n--- NLL ---" )
    print( NLL )
-   minNLL = min( [np[0][1] for np in NLL] )
-   maxNLL = max( [np[0][1] for np in NLL] )
+   minNLL = min( [np[0][1] for np in NLL if not math.isnan(np[0][1])] )
+   maxNLL = max( [np[0][1] for np in NLL if not math.isnan(np[0][1])] )
    print( "(minNLL,maxNLL) = (%f,%f)" % (minNLL,maxNLL) )
 
    nllHist = None

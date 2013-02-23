@@ -76,12 +76,12 @@ And then it starts looping of the grid points.
 
 Produce sample log file:
 ```
-python BatchProfileLikelihood.py --overwritePOI=SigXsecOverSM=1 --overwriteBins=SigXsecOverSM=100 -j 1 -c 0 -q | tee BatchProfileLikelihoodSampleLog1D.txt
+python BatchProfileLikelihood.py --overwritePOI=SigXsecOverSM=1 --overwriteBins=SigXsecOverSM=100 -j 1 -c 0 -q | tee batchProfile.log
 ```
 
 And create plots:
 ```
-python BatchProfileLikelihoodPlot.py -i BatchProfileLikelihoodSampleLog1D.txt --subtractMinNLL
+python BatchProfileLikelihoodPlot.py --subtractMinNLL
 ```
 The argument to "-i" can be a glob expression to log files (add quotes). Use "-q" to 
 suppress drawing and saving of the png image.
