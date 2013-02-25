@@ -210,6 +210,9 @@ def main():
    nll.setEvalErrorLoggingMode(ROOT.RooAbsReal.CountErrors)
    print( "Get NLL once. This first call sets the offset, so it is important that this happens when the parameters are at their initial values." )
    print( "nll = "+str( nll.getVal() ) )
+   print( "nll = "+str( nll.getVal() ) )
+   print( "nll = "+str( nll.getVal() ) )
+   print( "nll = "+str( nll.getVal() ) )
    print( "" )
 
 
