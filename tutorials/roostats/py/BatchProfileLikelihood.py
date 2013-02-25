@@ -210,8 +210,13 @@ def main():
    nll.setEvalErrorLoggingMode(ROOT.RooAbsReal.CountErrors)
    print( "Get NLL once. This first call sets the offset, so it is important that this happens when the parameters are at their initial values." )
    print( "nll = "+str( nll.getVal() ) )
+   # There seems to be some caching issue with some models.
+   # Moving all parameters around and then back seems to magically solve it.
+   for i in range( poiL.getSize() ): poiL.at(i).setVal( poiL.at(i).getVal()+0.1 )
+   for i in range( nuisL.getSize() ): nuisL.at(i).setVal( nuisL.at(i).getVal()+0.1 )
    print( "nll = "+str( nll.getVal() ) )
-   print( "nll = "+str( nll.getVal() ) )
+   for i in range( poiL.getSize() ): poiL.at(i).setVal( poiL.at(i).getVal()-0.1 )
+   for i in range( nuisL.getSize() ): nuisL.at(i).setVal( nuisL.at(i).getVal()-0.1 )
    print( "nll = "+str( nll.getVal() ) )
    print( "" )
 
