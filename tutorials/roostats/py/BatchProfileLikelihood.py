@@ -219,8 +219,10 @@ def main():
    print( "" )
    print( "### Batch Job" )
    print( "* Total grid points: "+str(numPoints) )
-   print( "* Total number of jobs: "+str(options.jobs) )
-   print( "* Calculate unconditional fit in separate job: "+str(options.unconditionalFitInSeparateJob) )
+   jobsString = str(options.jobs)
+   if options.unconditionalFitInSeparateJob: jobsString += " +1 for unconditional fit"
+   else: jobsString += " (unconditional fit done in each job)"
+   print( "* Total number of jobs: "+jobsString )
    print( "* This job number: "+str(options.counter) )
    print( "* Processing these grid points: [%d,%d)" % (firstPoint,lastPoint) )
    print( "" )
