@@ -28,6 +28,7 @@ parser.add_option("-j", "--jobs", help="Number of jobs.", dest="jobs", type="int
 
 parser.add_option("-f", "--fullRun", help="Do a full run.", dest="fullRun", default=False, action="store_true")
 parser.add_option(      "--unconditionalFitInSeparateJob", help="Do the unconditional fit in a separate job", dest="unconditionalFitInSeparateJob", default=False, action="store_true")
+parser.add_option(      "--printAllNuisanceParameters", help="Prints all nuisance parameters.", dest="printAllNuisanceParameters", default=False, action="store_true")
 
 parser.add_option("-q", "--quiet", dest="verbose", action="store_false", default=True, help="Quiet output.")
 options,args = parser.parse_args()
@@ -181,7 +182,7 @@ def main():
 
    firstPOI = mc.GetParametersOfInterest().first()
    poiL = ROOT.RooArgList( mc.GetParametersOfInterest() )
-   listNuisPars = ROOT.RooArgList( mc.GetNuisanceParameters() )
+   nuisL = ROOT.RooArgList( mc.GetNuisanceParameters() )
 
    if options.fullRun: visualizeEnumeration( poiL )
 
@@ -216,23 +217,28 @@ def main():
    numPoints = reduce( lambda x,y: x*y, [poiL.at(d).getBins() for d in range(poiL.getSize())] )
    firstPoint,lastPoint = jobBins( numPoints )
    print( "" )
-   print( "# Batch Job" )
-   print( "" )
+   print( "### Batch Job" )
    print( "* Total grid points: "+str(numPoints) )
    print( "* Total number of jobs: "+str(options.jobs) )
    print( "* Calculate unconditional fit in separate job: "+str(options.unconditionalFitInSeparateJob) )
    print( "* This job number: "+str(options.counter) )
    print( "* Processing these grid points: [%d,%d)" % (firstPoint,lastPoint) )
    print( "" )
-   print( "" )
 
    # for later plotting, print some book-keeping info
-   print( "# Parameters Of Interest" )
-   print( "" )
+   print( "### Parameters Of Interest" )
    for p in range( poiL.getSize() ):
       print( "* POI "+ ("%s=[%d,%f,%f]" % (poiL.at(p).GetName(),poiL.at(p).getBins(),poiL.at(p).getMin(),poiL.at(p).getMax())) )
    print( "" )
-   print( "" )
+
+   # if all nuisance parameters are requested, also print their book-keeping info here
+   if options.printAllNuisanceParameters:
+      print( "### Nuisance Parameters" )
+      for p in range( nuisL.getSize() ):
+         print( "* NUIS "+ ("%s=[%d,%f,%f]" % (nuisL.at(p).GetName(),nuisL.at(p).getBins(),nuisL.at(p).getMin(),nuisL.at(p).getMax())) )
+      print( "" )
+      print( "" )
+
 
    # unconditional fit
    if (not options.unconditionalFitInSeparateJob) or \
@@ -251,7 +257,16 @@ def main():
       print( "--- next point: "+str(i)+" ---" )
       print( "Parameters Of Interest: "+str([ poiL.at(p).getVal() for p in range(poiL.getSize()) ]) )
       minimize( nll )
-      print( "nll="+str(nll.getVal())+", "+", ".join( [poiL.at(p).GetName()+"="+str(poiL.at(p).getVal()) for p in range(poiL.getSize())] ) )
+      
+      # build result line
+      result = "nll="+str(nll.getVal())+", "
+      # poi values
+      result += ", ".join( [poiL.at(p).GetName()+"="+str(poiL.at(p).getVal()) for p in range(poiL.getSize())] )
+      # nuisance parameter values if requested
+      if options.printAllNuisanceParameters:
+         result += ", "
+         result += ", ".join( [nuisL.at(p).GetName()+"="+str(nuisL.at(p).getVal()) for p in range(nuisL.getSize())] )
+      print( result )
       
 
 

@@ -57,9 +57,11 @@ def main():
    print( bestFit )
 
    print( "\n--- NLL ---" )
+#    print( "Cleaning NLL" )
+#    NLL = [np for np in NLL if not math.isnan(np[0][1]) and not math.isinf(np[0][1])]
    print( NLL )
-   minNLL = min( [np[0][1] for np in NLL if not math.isnan(np[0][1])] )
-   maxNLL = max( [np[0][1] for np in NLL if not math.isnan(np[0][1])] )
+   minNLL = min( [np[0][1] for np in NLL] )
+   maxNLL = max( [np[0][1] for np in NLL] )
    print( "(minNLL,maxNLL) = (%f,%f)" % (minNLL,maxNLL) )
 
    nllHist = None
@@ -78,7 +80,7 @@ def main():
    
    for n in NLL:
       bin,val = (None,None)
-      if len(n) == 2:
+      if len( POIs ) == 1:
          bin = nllHist.FindBin( n[1][1] )
          val = n[0][1]
          
