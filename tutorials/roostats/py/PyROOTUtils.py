@@ -119,6 +119,25 @@ class Graph( ROOT.TGraph ):
       self.ComputeRange( r[0], r[1], r[2], r[3] )
       return r
 
+   def scale( self, factor ):
+      for i in range( 0, self.GetN() ):
+         p = ( ROOT.Double(), ROOT.Double() )
+         self.GetPoint( i, p[0], p[1] )
+         self.SetPoint( i, p[0], p[1]*factor )
+   
+   def integral( self ):
+      """ Calculate integral using trapezoidal rule. """
+      integral = 0.0
+      for i in range( 1, self.GetN() ):
+         previousPoint = ( ROOT.Double(), ROOT.Double() )
+         thisPoint = ( ROOT.Double(), ROOT.Double() )
+         self.GetPoint( i-1, previousPoint[0], previousPoint[1] )
+         self.GetPoint( i, thisPoint[0], thisPoint[1] )
+         
+         integral += (thisPoint[0]-previousPoint[0]) * (thisPoint[1]+previousPoint[1])/2.0
+      return integral
+      
+
    def table( self, bandLow=None, bandHigh=None, bandDifference=True ):
       out = ""
       
@@ -257,6 +276,7 @@ def DrawLine( x1,y1,x2,y2, lineWidth=None, lineStyle=None, lineColor=None, NDC=F
    return l
 
 def DrawHLine( y, lineWidth=None, lineStyle=None, lineColor=None ):
+   ROOT.gPad.Update()
    x1,y1,x2,y2 = ( ROOT.Double(),ROOT.Double(),ROOT.Double(),ROOT.Double() )
    ROOT.gPad.GetRangeAxis( x1,y1, x2,y2 )
    return DrawLine(
