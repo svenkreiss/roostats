@@ -75,7 +75,7 @@ class Legend( ROOT.TLegend ):
 
 
 class Graph( ROOT.TGraph ):
-   def __init__( self, x, y=None, fillColor=None, lineColor=None, lineStyle=None, lineWidth=None ):
+   def __init__( self, x, y=None, fillColor=None, lineColor=None, lineStyle=None, lineWidth=None, sort=True ):
       """ takes inputs of the form:
              x = [ (x1,y1), (x2,y2), ... ]
              y = None (default)
@@ -101,6 +101,12 @@ class Graph( ROOT.TGraph ):
          if len(x) != len(y):
             print( "x and y have to have the same length." )
             return
+            
+         # sort
+         if sort:
+            xy = sorted( zip(x,y) )
+            x = [i for i,j in xy]
+            y = [j for i,j in xy]
    
          ROOT.TGraph.__init__( self, len(x), array('f',x), array('f',y) )
       
@@ -124,6 +130,12 @@ class Graph( ROOT.TGraph ):
          p = ( ROOT.Double(), ROOT.Double() )
          self.GetPoint( i, p[0], p[1] )
          self.SetPoint( i, p[0], p[1]*factor )
+
+   def add( self, term ):
+      for i in range( 0, self.GetN() ):
+         p = ( ROOT.Double(), ROOT.Double() )
+         self.GetPoint( i, p[0], p[1] )
+         self.SetPoint( i, p[0], p[1]+term )
    
    def integral( self ):
       """ Calculate integral using trapezoidal rule. """
@@ -281,6 +293,15 @@ def DrawHLine( y, lineWidth=None, lineStyle=None, lineColor=None ):
    ROOT.gPad.GetRangeAxis( x1,y1, x2,y2 )
    return DrawLine(
       x1,y, x2,y,
+      lineWidth, lineStyle, lineColor,
+   )
+
+def DrawVLine( x, lineWidth=None, lineStyle=None, lineColor=None ):
+   ROOT.gPad.Update()
+   x1,y1,x2,y2 = ( ROOT.Double(),ROOT.Double(),ROOT.Double(),ROOT.Double() )
+   ROOT.gPad.GetRangeAxis( x1,y1, x2,y2 )
+   return DrawLine(
+      x,y1, x,y2,
       lineWidth, lineStyle, lineColor,
    )
 
