@@ -171,6 +171,7 @@ def minimize( nll ):
 def preFit( w, mc, nll ):
    initVars = {
       "pdf_gg": (0.06,0.01),
+      "QCDscale_ggVV": (0.14,0.01),
    }
    for name,valErr in initVars.iteritems():
       if w.var( name ):
