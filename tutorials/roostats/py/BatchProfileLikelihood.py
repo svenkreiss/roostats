@@ -168,6 +168,19 @@ def minimize( nll ):
 
 
 
+def preFit( w, mc, nll ):
+   initVars = {
+      "pdf_gg": (0.06,0.01),
+   }
+   for name,valErr in initVars.iteritems():
+      if w.var( name ):
+         print( "PREFIT - INITVARS: "+name+" = "+str(valErr[0])+" +/- "+str(valErr[1]) )
+         w.var( name ).setVal( valErr[0] )
+         w.var( name ).setError( valErr[1] )
+      else:
+         print( "WARNING PREFIT - INITVARS: "+name+" not in workspace." )
+
+
 
 
 def main():
@@ -247,6 +260,7 @@ def main():
       for p in range( poiL.getSize() ): poiL.at(p).setConstant(False)
       print( "" )
       print( "--- unconditional fit ---" )
+      preFit( w, mc, nll )
       minimize( nll )
       print( "ucmles -- nll="+str(nll.getVal())+", "+", ".join( [poiL.at(p).GetName()+"="+str(poiL.at(p).getVal()) for p in range(poiL.getSize())] ) )
 
@@ -257,6 +271,7 @@ def main():
       print( "" )
       print( "--- next point: "+str(i)+" ---" )
       print( "Parameters Of Interest: "+str([ poiL.at(p).getVal() for p in range(poiL.getSize()) ]) )
+      preFit( w, mc, nll )
       minimize( nll )
       
       # build result line
