@@ -28,6 +28,7 @@ parser.add_option("-j", "--jobs", help="Number of jobs.", dest="jobs", type="int
 
 parser.add_option("-f", "--fullRun", help="Do a full run.", dest="fullRun", default=False, action="store_true")
 parser.add_option(      "--unconditionalFitInSeparateJob", help="Do the unconditional fit in a separate job", dest="unconditionalFitInSeparateJob", default=False, action="store_true")
+parser.add_option(      "--initVars", help="Set these vars to these values before every fit (to work-around minuit getting stuck in local minima). It takes comma separated inputs of the form var=4.0 or var=4.0+/-1.0 .", dest="initVars", default=None )
 parser.add_option(      "--printAllNuisanceParameters", help="Prints all nuisance parameters.", dest="printAllNuisanceParameters", default=False, action="store_true")
 
 parser.add_option("-q", "--quiet", dest="verbose", action="store_false", default=True, help="Quiet output.")
@@ -167,17 +168,19 @@ def minimize( nll ):
 
 
 
-
-def preFit( w, mc, nll ):
-   initVars = {
-      "pdf_gg": (0.06,0.01),
-      "QCDscale_ggVV": (0.14,0.01),
-   }
+def preFit( w, mc, nll ):   
+   if not options.initVars: return
+   
+   initVars = helperModifyModelConfig.varsDictFromString( options.initVars )
    for name,valErr in initVars.iteritems():
       if w.var( name ):
-         print( "PREFIT - INITVARS: "+name+" = "+str(valErr[0])+" +/- "+str(valErr[1]) )
-         w.var( name ).setVal( valErr[0] )
-         w.var( name ).setError( valErr[1] )
+         if valErr[1]:
+            print( "PREFIT - INITVARS: "+name+" = "+str(valErr[0])+" +/- "+str(valErr[1]) )
+            w.var( name ).setVal( valErr[0] )
+            w.var( name ).setError( valErr[1] )
+         else:
+            print( "PREFIT - INITVARS: "+name+" = "+str(valErr[0])+" (not setting error)" )
+            w.var( name ).setVal( valErr[0] )
       else:
          print( "WARNING PREFIT - INITVARS: "+name+" not in workspace." )
 
@@ -207,7 +210,7 @@ def main():
 
    ROOT.RooAbsReal.defaultIntegratorConfig().method1D().setLabel("RooAdaptiveGaussKronrodIntegrator1D")
 
-   ROOT.Math.MinimizerOptions.SetDefaultMinimizer("Minuit2")
+   ROOT.Math.MinimizerOptions.SetDefaultMinimizer("Minuit2","Minimize")
    ROOT.Math.MinimizerOptions.SetDefaultStrategy(1)
    #ROOT.Math.MinimizerOptions.SetDefaultPrintLevel(1)
    ROOT.Math.MinimizerOptions.SetDefaultPrintLevel(-1)

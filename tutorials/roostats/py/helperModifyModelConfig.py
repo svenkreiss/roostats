@@ -14,7 +14,22 @@ def addOptionsToOptParse( parser ):
    parser.add_option(      "--overwriteBins", help="Overwrite bins. Example: \"mu=5,mH=100\".", dest="overwriteBins", default=False )
 
 
+
+def varsDictFromString( str ):
+   """ Helper function to make a dictionary from an options string. """
+   
+   vars = str.split(",")
+   vars = dict(   (v.split("=")[0].strip(), v.split("=")[1]) for v in vars   )
+   for name,valErr in vars.iteritems():
+      if "+/-" in valErr:
+         vars[ name ] = (   float( valErr.split("+/-")[0] ),float( valErr.split("+/-")[1] )   )
+      else:
+         vars[ name ] = (   float( valErr ), None    )
+   return vars
+
+
 def apply( options, w, mc ):
+   """ Todo: use varsDictFromString() here. """
 
    if options.overwriteRange:
       parAndRange = options.overwriteRange.split(",")
