@@ -149,6 +149,28 @@ class Graph( ROOT.TGraph ):
          integral += (thisPoint[0]-previousPoint[0]) * (thisPoint[1]+previousPoint[1])/2.0
       return integral
       
+   def argminX( self ):
+      """ Get the minimum X. """
+      min = 1e30
+      minX = None
+      for i in range( 0, self.GetN() ):
+         p = ( ROOT.Double(), ROOT.Double() )
+         self.GetPoint( i, p[0], p[1] )
+         if p[1] < min:
+            min = p[1]
+            minX = p[0]
+      return minX
+      
+   def argminY( self ):
+      """ Get the minimum Y. """
+      min = 1e30
+      for i in range( 0, self.GetN() ):
+         p = ( ROOT.Double(), ROOT.Double() )
+         self.GetPoint( i, p[0], p[1] )
+         if p[1] < min: min = p[1]
+      return min
+      
+      
 
    def table( self, bandLow=None, bandHigh=None, bandDifference=True ):
       out = ""
