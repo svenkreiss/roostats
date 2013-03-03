@@ -7,6 +7,9 @@ def addOptionsToOptParse( parser ):
    parser.add_option("-w", "--wsName", help="Workspace name", type="string", dest="wsName", default="combined")
    parser.add_option("-m", "--mcName", help="ModelConfig name", type="string", dest="mcName", default="ModelConfig")
    parser.add_option("-d", "--dataName", help="data name", type="string", dest="dataName", default="obsData")
+   
+   # for example for asimov data runs
+   parser.add_option(      "--loadSnapshots", help="loads this comma separated list of snapshots", dest="loadSnapshots", default=None )
 
    # for modifications
    parser.add_option(      "--overwritePOI", help="Force to take comma separated list of parameters with value for poi. Example: \"mu=1,mH=125\" will make these two the poi.", dest="overwritePOI", default=False )
@@ -90,6 +93,13 @@ def apply( options, w, mc ):
       mc.GetSnapshot().Print("V")
       print( "" )
       print( "" )
+      
+   if options.loadSnapshots:
+      sn = options.loadSnapshots.split(",")
+      for s in sn:
+         print( "Loading snapshot "+s+" ..." )
+         w.loadSnapshot( s )
+         print( "done." )
       
       
 
