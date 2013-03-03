@@ -170,7 +170,6 @@ class Graph( ROOT.TGraph ):
          if p[1] < min: min = p[1]
       return min
       
-      
 
    def table( self, bandLow=None, bandHigh=None, bandDifference=True ):
       out = ""
@@ -194,6 +193,7 @@ class Graph( ROOT.TGraph ):
       """ xRange must be of the form (min,max) when given """
       if xVar and not xRange: xRange = (xVar.getMin(), xVar.getMax())
       if xVar and not xCenter: xCenter = xVar.getVal()
+      if not xRange: xRange = (self.GetRanges()[0], self.GetRanges()[2])
       
       low,high = (None,None)
 
@@ -226,6 +226,7 @@ class Graph( ROOT.TGraph ):
       """ xRange must be of the form (min,max) when given """
       if xVar and not xRange: xRange = (xVar.getMin(), xVar.getMax())
       if xVar and not xCenter: xCenter = xVar.getVal()
+      if not xRange: xRange = (self.GetRanges()[0], self.GetRanges()[2])
       
       low,high = (None,None)
 
@@ -253,6 +254,15 @@ class Graph( ROOT.TGraph ):
          higher = newHigher
          
       return (low,high)
+      
+   def getLatexIntervalFromNll( self, minX, up=0.5, xRange=None, steps=1000, digits=2 ):
+      """ The parameter up is the same as in a Minos scan (0.5 for nll 
+      and 68% two sided intervals). """
+      
+      mInterval = self.getFirstIntersectionsWithValue( up, xCenter=minX, xRange=xRange, steps=steps )
+      fF = "%."+str(digits)+"f"   # float Format
+      return ( (fF+"^{+"+fF+"}_{"+fF+"}") % (minX,mInterval[1]-minX,mInterval[0]-minX) )
+      
       
 
 
@@ -326,6 +336,15 @@ def DrawVLine( x, lineWidth=None, lineStyle=None, lineColor=None ):
       x,y1, x,y2,
       lineWidth, lineStyle, lineColor,
    )
+   
+def DrawBox( x1,y1, x2,y2, fillColor=None, lineColor=None, lineWidth=None, lineStyle=None ):
+   b = ROOT.TBox( x1,y1, x2,y2 )
+   if fillColor: b.SetFillColor( fillColor )
+   if lineColor: b.SetLineColor( lineColor )
+   if lineStyle: b.SetLineColor( lineStyle )
+   if lineWidth: b.SetLineColor( lineWidth )
+   b.Draw()
+   return b
 
 
 def DrawTextOneLine( x, y, text, textColor = 1, textSize = 0.04, NDC = True, halign = "left", valign = "bottom", skipLines = 0 ):
