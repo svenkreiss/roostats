@@ -25,7 +25,7 @@ class RooChangeTracker ;
 class RooStarMomentMorph : public RooAbsPdf {
 public:
 
-  enum Setting { Linear, SineLinear, NonLinear, NonLinearPosFractions, NonLinearLinFractions } ;
+  enum Setting { Linear, NonLinear, NonLinearPosFractions, NonLinearLinFractions } ;
 
   RooStarMomentMorph() ;
   

@@ -257,53 +257,68 @@ RooStarMomentMorph::CacheElem* RooStarMomentMorph::getCache(const RooArgSet* nse
     ownedComps.add(*frac) ;
   }
 
-  // mean and sigma
-  RooArgList obsList(_obsList);
-  for (Int_t i=0; i<nPdf; ++i) {
+  if (_useHorizMorph) {
 
-    RooAbsPdf* pdf_i=(RooAbsPdf*)_pdfList.at(i);
+    // mean and sigma
+    RooArgList obsList(_obsList);
+    for (Int_t i=0; i<nPdf; ++i) {
+
+      RooAbsPdf* pdf_i=(RooAbsPdf*)_pdfList.at(i);
+      for (Int_t j=0; j<nObs; ++j) {
+
+	std::string meanName  = Form("%s_mean_%d_%d",GetName(), i,j);
+	std::string sigmaName = Form("%s_sigma_%d_%d",GetName(),i,j);      
+      
+	//RooMoment* mom = nset ? ((RooAbsPdf*)_pdfList.at(i))->sigma((RooRealVar&)*obsList.at(j),*nset) 
+	//: ((RooAbsPdf*)_pdfList.at(i))->sigma((RooRealVar&)*obsList.at(j)) ;
+
+		
+	RooRealVar& var_j=*(RooRealVar*)obsList.at(j);
+	//rdh RooMoment* mom = nset ? pdf_i->sigma(var_j,*nset) : pdf_i->sigma(var_j) ;
+	//rdh sigmarv[sij(i,j)] = mom ;
+	//rdh meanrv [sij(i,j)] = mom->mean() ;
+
+	// Create an integral over all observables except the j-th positioned one
+	RooArgSet notJ(obsList,"notJ");
+	notJ.remove(var_j);
+	RooAbsReal* pdfIntegral = pdf_i->createIntegral(notJ);
+
+	// Get the mean and sigma with respect to the j-th observable
+	if (nset) {
+	  sigmarv[sij(i,j)] = pdfIntegral->sigma(var_j, *nset);
+	  meanrv [sij(i,j)] = pdfIntegral->mean (var_j, *nset);
+	}
+	else {
+	  sigmarv[sij(i,j)] = pdfIntegral->sigma(var_j);
+	  meanrv [sij(i,j)] = pdfIntegral->mean (var_j);
+	}
+	delete pdfIntegral;
+
+	ownedComps.add(*sigmarv[sij(i,j)]) ;
+      }
+    }
+
+    // slope and offset (to be set later, depend on nuisance parameters)
     for (Int_t j=0; j<nObs; ++j) {
 
-      std::string meanName  = Form("%s_mean_%d_%d",GetName(), i,j);
-      std::string sigmaName = Form("%s_sigma_%d_%d",GetName(),i,j);      
-      
-      //RooMoment* mom = nset ? ((RooAbsPdf*)_pdfList.at(i))->sigma((RooRealVar&)*obsList.at(j),*nset) 
-      //: ((RooAbsPdf*)_pdfList.at(i))->sigma((RooRealVar&)*obsList.at(j)) ;
+      RooArgList meanList("meanList");
+      RooArgList rmsList("rmsList");
 
-      RooRealVar& var_j=*(RooRealVar*)obsList.at(j);
-      RooMoment* mom = nset ? pdf_i->sigma(var_j,*nset) : pdf_i->sigma(var_j) ;
-       
-      sigmarv[sij(i,j)] = mom ;
-      meanrv [sij(i,j)] = mom->mean() ;
+      for (Int_t i=0; i<nPdf; ++i) {
+	meanList.add(*meanrv [sij(i,j)]);
+	rmsList. add(*sigmarv[sij(i,j)]);
+      }
 
-      ownedComps.add(*sigmarv[sij(i,j)]) ;
+      std::string myrmsName = Form("%s_rms_%d",GetName(),j);
+      std::string myposName = Form("%s_pos_%d",GetName(),j);
+
+      mypos[j] = new RooAddition(myposName.c_str(),myposName.c_str(),meanList,coefList2);
+      myrms[j] = new RooAddition(myrmsName.c_str(),myrmsName.c_str(),rmsList,coefList3);
+
+      ownedComps.add(RooArgSet(*myrms[j],*mypos[j])) ;
     }
+ 
   }
-
-  // slope and offset (to be set later, depend on nuisance parameters)
-  for (Int_t j=0; j<nObs; ++j) {
-
-    RooArgList meanList("meanList");
-    RooArgList rmsList("rmsList");
-
-    for (Int_t i=0; i<nPdf; ++i) {
-      meanList.add(*meanrv [sij(i,j)]);
-      rmsList. add(*sigmarv[sij(i,j)]);
-    }
-
-    std::string myrmsName = Form("%s_rms_%d",GetName(),j);
-    std::string myposName = Form("%s_pos_%d",GetName(),j);
-
-    mypos[j] = new RooAddition(myposName.c_str(),myposName.c_str(),meanList,coefList2);
-    myrms[j] = new RooAddition(myrmsName.c_str(),myrmsName.c_str(),rmsList,coefList3);
-
-    ownedComps.add(RooArgSet(*myrms[j],*mypos[j])) ;
-  }
-
-  //for (Int_t i=0;i<_parList.getSize();i++) {    
-  //RooRealVar* par=(RooRealVar*)_parList.at(i);
-  //par->Print();
-  //}
 
   // construction of unit pdfs
   _pdfItr->Reset();
@@ -462,8 +477,7 @@ void RooStarMomentMorph::CacheElem::calculateFractions(const RooStarMomentMorph&
   _fractionsCalculated=true;
 
   switch (self._setting) {
-  case Linear: 
-  case SineLinear:
+  case Linear:
     {
       //int nObs=self._obsList.getSize();
       
@@ -497,10 +511,6 @@ void RooStarMomentMorph::CacheElem::calculateFractions(const RooStarMomentMorph&
 	double mfrac = (imax>imin) ? (mhi-m0)/(mhi-mlo) : (mlo-m0)/(mhi-mlo);
 	if (mfrac> 1.) mfrac= 1.;
 	if (mfrac<-1.) mfrac=-1.;
-
-	if (self._setting==SineLinear) {
-	  mfrac = TMath::Sin( TMath::PiOver2()*mfrac ); // this gives a continuous differentiable transition between grid points. 
-	}
 	
 	((RooRealVar*)frac(imin))->setVal(((RooRealVar*)frac(imin))->getVal()+mfrac); 
 	((RooRealVar*)frac(nPdf+imin))->setVal(((RooRealVar*)frac(nPdf+imin))->getVal()+mfrac); 

@@ -64,23 +64,30 @@ namespace RooStats {
       TGraph* GetChainScatterBurnIn(RooRealVar& xVar, RooRealVar& yVar);
       TGraph* GetChainScatterFirstPoint(RooRealVar& xVar, RooRealVar& yVar);
       void DrawChainScatter(RooRealVar& xVar, RooRealVar& yVar);
-      TGraph* GetParameterVsTime(RooRealVar& param);
-      void DrawParameterVsTime(RooRealVar& param);
-      void DrawNLLVsTime();
+      
+      TGraph* GetParameterVsTime(RooRealVar& param, int samplingPoints=-1);
+      void DrawParameterVsTime(RooRealVar& param, int samplingPoints=-1);
+      TGraph* GetNLLVsTime(int samplingPoints=-1);
+      void DrawNLLVsTime(int samplingPoints=-1);
+      
       void DrawNLLHist(const Option_t* options = NULL);
       void DrawWeightHist(const Option_t* options = NULL);
 
-      TH1* GetMaxNLLHist1D(RooRealVar& xVar);
       TH1* GetMinNLLHist1D(RooRealVar& xVar, bool subtractMinNLL=true);
       TH1* GetMaxLikelihoodHist1D(RooRealVar& xVar);
-      TH2* GetMaxNLLHist2D(RooRealVar& xVar, RooRealVar& yVar);
+      TH2* GetMinNLLHist2D(RooRealVar& xVar, RooRealVar& yVar, bool subtractMinNLL=true);
       TH2* GetMaxLikelihoodHist2D(RooRealVar& xVar, RooRealVar& yVar);
-
 
       TH1* GetHist1D(RooRealVar& var);
       TH1* GetHist1DSlice(RooRealVar& var, RooRealVar& sliceVar, double sliceMin, double sliceMax);
-      TH1* GetHist1DSliceNormalized(RooRealVar& var, RooRealVar& sliceVar, double sliceMin, double sliceMax);
       TH2* GetHist2D(RooRealVar& xVar, RooRealVar& yVar);
+
+      static double ContourLevel( TH1* h, double integralValue );      
+      static void HistMin( TH1* h1, TH1* h2 );
+      static TH1D* RebinHist1DMin( TH1* h, int rebin );
+      static TH2D* RebinHist2DMin( TH2* h, int rebin );
+      static TH1* MaxLFromNLLHist( TH1* nllHist );
+      
 
    private:
 
