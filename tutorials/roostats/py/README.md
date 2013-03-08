@@ -25,11 +25,11 @@ Changing to SequentialProposal(100.0).<br />
 ![seqProp_extras](docImages/SequentialProposal_100_POIAndFirstNuisParWalk.png)
 
 Now, using the standard SequentialProposal(10.0), let's look at various values of 
-the "oversampling". This is oversampling=3.<br />
+the importance factor. This is importanceFactor=3.<br />
 <!--![seqProp_interval](docImages/SequentialProposal_10_03_interval.png)-->
 ![seqProp_extras](docImages/SequentialProposal_10_03_POIAndFirstNuisParWalk.png)
 
-And oversampling=10.<br />
+And importanceFactor=10.<br />
 <!--![seqProp_interval](docImages/SequentialProposal_10_10_interval.png)-->
 ![seqProp_extras](docImages/SequentialProposal_10_10_POIAndFirstNuisParWalk.png)
 

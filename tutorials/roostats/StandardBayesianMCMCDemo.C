@@ -40,10 +40,7 @@ for simple problems, but it scales to much more complicated cases.
 #include "RooStats/ProposalHelper.h"
 #include "RooStats/ProposalHelper.h"
 #include "RooFitResult.h"
-<<<<<<< HEAD
 #include "RooRandom.h"
-=======
->>>>>>> development
 
 
 using namespace RooFit;
@@ -52,14 +49,10 @@ using namespace RooStats;
 void StandardBayesianMCMCDemo(const char* infile = "",
 		      const char* workspaceName = "combined",
 		      const char* modelConfigName = "ModelConfig",
-<<<<<<< HEAD
 		      const char* dataName = "obsData")
 {
 
   RooRandom::randomGenerator()->SetSeed( 0 );
-=======
-		      const char* dataName = "obsData"){
->>>>>>> development
 
   /////////////////////////////////////////////////////////////
   // First part is just to access a user-defined file 
@@ -144,14 +137,14 @@ void StandardBayesianMCMCDemo(const char* infile = "",
   // 
   // 95% interval on SigXsecOverSM is : [0, 2.15359] 
   //
-  // Use factor 10 oversampling on parametersOfInterest
-  //SequentialProposal sp(0.1, *mc->GetParametersOfInterest(), 3);
+  // Use importance factor 3 on parametersOfInterest
+  //SequentialProposal sp(1, *mc->GetParametersOfInterest(), 3);
   // Factor 3:
   // [#1] INFO:Eval -- Proposal acceptance rate: 18.0398%
   // [#1] INFO:Eval -- Number of steps in chain: 180398
   // 
   // 95% interval on SigXsecOverSM is : [0, 2.15503] 
-  SequentialProposal sp(10, *mc->GetParametersOfInterest(), 3);
+  SequentialProposal sp(1, *mc->GetParametersOfInterest(), 3);
 
   /////////////////////////////////////////////
   // create and use the MCMCCalculator

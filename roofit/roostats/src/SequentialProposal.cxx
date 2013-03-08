@@ -26,16 +26,16 @@ namespace RooStats {
 SequentialProposal::SequentialProposal(double divisor) : 
     ProposalFunction(),
     fDivisor(1./divisor),
-    fOversamplingVariables(NULL),
-    fOversamplingFactor(0)
+    fImportantVariables(NULL),
+    fImportanceFactor(0)
 {
 }
 
-SequentialProposal::SequentialProposal(double divisor, const RooArgSet& oversamplingVariables, int oversamplingFactor) : 
+SequentialProposal::SequentialProposal(double divisor, const RooArgSet& importantVariables, int importanceFactor) : 
     ProposalFunction(),
     fDivisor(1./divisor),
-    fOversamplingVariables(&oversamplingVariables),
-    fOversamplingFactor(oversamplingFactor)
+    fImportantVariables(&importantVariables),
+    fImportanceFactor(importanceFactor)
 {
 }
      
@@ -46,8 +46,8 @@ void SequentialProposal::Propose(RooArgSet& xPrime, RooArgSet& x )
    RooStats::SetParameters(&x, &xPrime);
 
    int n = xPrime.getSize();
-   if( fOversamplingFactor > 0  &&  fOversamplingVariables )
-      n += fOversamplingFactor * fOversamplingVariables->getSize();
+   if( fImportanceFactor > 0  &&  fImportantVariables )
+      n += fImportanceFactor * fImportantVariables->getSize();
 
    int j = int( floor(RooRandom::uniform()*n) );
    
@@ -60,8 +60,8 @@ void SequentialProposal::Propose(RooArgSet& xPrime, RooArgSet& x )
       }
    }else{
       //std::cout << "Oversampling" << std::endl;
-      int osj = (j-xPrime.getSize()) % fOversamplingVariables->getSize();
-      std::auto_ptr<TIterator> it(fOversamplingVariables->createIterator());
+      int osj = (j-xPrime.getSize()) % fImportantVariables->getSize();
+      std::auto_ptr<TIterator> it(fImportantVariables->createIterator());
       for (int i = 0; (var = (RooRealVar*)it->Next()) != NULL; ++i) {
          if (i == osj) {
             // need to get the corresponding var in xPrime before exiting the loop

@@ -101,10 +101,10 @@ def main():
            "title"   : "Divisor = 100" },
          { "proposal": ROOT.RooStats.SequentialProposal(10, mc.GetParametersOfInterest(), 3), 
            "id"      : "SequentialProposal_10_03",
-           "title"   : "Divisor = 10, Oversampling of POI = 3" },
+           "title"   : "Divisor = 10, Importance factor of POI = 3" },
          { "proposal": ROOT.RooStats.SequentialProposal(10, mc.GetParametersOfInterest(), 10), 
            "id"      : "SequentialProposal_10_10",
-           "title"   : "Divisor = 10, Oversampling of POI = 10" },
+           "title"   : "Divisor = 10, Importance factor of POI = 10" },
       ]
    
    
@@ -176,8 +176,6 @@ def main():
          h5.SetTitle( "Comparison of Posterior Contours (red) and NLL Contours (blue)" )
          h5.GetZaxis().SetTitle( "Posterior Contours (red) / NLL Contours (blue)" )
          cont.append( h5 )
-         #cont68Marginalized = getContours( h5, contourLevel(h5,0.68), c3 )
-         #cont95Marginalized = getContours( h5, contourLevel(h5,0.95), c3 )
          cont68Marginalized = getContours( h5, plot.ContourLevel(h5,0.68), c3 )
          cont95Marginalized = getContours( h5, plot.ContourLevel(h5,0.95), c3 )
          cont.append( cont68Marginalized+cont95Marginalized )
