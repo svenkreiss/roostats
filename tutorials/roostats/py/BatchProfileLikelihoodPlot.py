@@ -38,7 +38,7 @@ def getInputFromLogs( files ):
    POIs = []
    NUISs = []
    
-   regexParValue = re.compile( "^(?P<par>[-\b\w\d_]+)=(?P<value>[-\d\.einf]+)$" )
+   regexParValue = re.compile( "^(?P<par>[-\b\w\d_\.]+)=(?P<value>[-\d\.einf]+)$" )
    
    for fName in files:
       print( "Opening "+fName )
@@ -156,14 +156,14 @@ def main():
       
    # 2d debug histos
    histos2d = {}
-   for poi,nuis1,nuis2 in [(POIs[0][0],"XSRatio","mu_BR_ZZ")]:
+   # change the names below for your model
+   params2d = [(POIs[0][0],"nuis1","nuis2"),(POIs[0][0],"nuis1","nuis3")]
+   for poi,nuis1,nuis2 in params2d:
       nu1 = [ n for n in NUISs if nuis1==n[0] ]
       nu2 = [ n for n in NUISs if nuis2==n[0] ]
       if len( nu1 ) != 1   or   len( nu2 ) != 1: continue
       nu1 = nu1[0]
       nu2 = nu2[0]
-      print( nu1 )
-      print( nu2 )
       h = ROOT.TH2D( 
          poi+"_"+nuis1+"_"+nuis2, poi+"_"+nuis1+"_"+nuis2, 
          int(nu1[1][0]), nu1[1][1], nu1[1][2],
@@ -172,30 +172,13 @@ def main():
       for poiVal,n1,n2 in zip( NLL[poi], NLL[nuis1], NLL[nuis2] ):
          h.SetBinContent( h.FindBin( n1,n2 ), poiVal )
       histos2d[ h.GetName() ] = h
-   for poi,nuis1,nuis2 in [(POIs[0][0],"BRRatio","mu_BR_ZZ")]:
-      nu1 = POIs[0]
-      nu2 = [ n for n in NUISs if nuis2==n[0] ]
-      if len( nu2 ) != 1: continue
-      nu2 = nu2[0]
-      print( nu1 )
-      print( nu2 )
-      h = ROOT.TH2D( 
-         poi+"_"+nuis1+"*"+nuis2+"_"+nuis2, poi+"_"+nuis1+"*"+nuis2+"_"+nuis2, 
-         int(nu1[1][0]), nu1[1][1], nu1[1][2],
-         int(nu2[1][0]), nu2[1][1], nu2[1][2],
-      )
-      for poiVal,n1,n2 in zip( NLL[poi], NLL[nuis1], NLL[nuis2] ):
-         h.SetBinContent( h.FindBin( n1*n2,n2 ), poiVal )
-      histos2d[ h.GetName() ] = h
-
 
    # create tgraphs
    nllTGraphs = {}
    nuisParGraphs = {}
    for poi in POIs:
-      print(NLL[poi[0]] )
-      print(NLL['nll'])
-      nllTGraph = PyROOTUtils.Graph( NLL[poi[0]], NLL['nll'] )
+      pn = [ (p,n) for p,n in zip(NLL[poi[0]], NLL['nll']) if n < minNLL+100.0 ]
+      nllTGraph = PyROOTUtils.Graph( pn )
       if options.subtractMinNLL: nllTGraph.add( -minNLL )
       nllTGraphs[poi[0]] = nllTGraph
 
@@ -235,11 +218,6 @@ def main():
          nllTGraph.SetLineColor( ROOT.kRed )
          nllTGraph.Draw("SAME")
       canvas.cd(2)
-#       if likelihoodTGraph:
-#          likelihoodTGraph.SetTitle( "profile Likelihood" )
-#          likelihoodTGraph.SetLineWidth( 2 )
-#          likelihoodTGraph.SetLineColor( ROOT.kRed )
-#          likelihoodTGraph.Draw("A,L")
       canvas.SaveAs( "docImages/batchProfileLikelihood1D.png" )
       canvas.Update()
       raw_input( "Press enter to continue ..." )
