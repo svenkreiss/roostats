@@ -75,7 +75,7 @@ class Legend( ROOT.TLegend ):
 
 
 class Graph( ROOT.TGraph ):
-   def __init__( self, x, y=None, fillColor=None, lineColor=None, lineStyle=None, lineWidth=None ):
+   def __init__( self, x, y=None, fillColor=None, lineColor=None, lineStyle=None, lineWidth=None, sort=True ):
       """ takes inputs of the form:
              x = [ (x1,y1), (x2,y2), ... ]
              y = None (default)
@@ -101,6 +101,12 @@ class Graph( ROOT.TGraph ):
          if len(x) != len(y):
             print( "x and y have to have the same length." )
             return
+            
+         # sort
+         if sort:
+            xy = sorted( zip(x,y) )
+            x = [i for i,j in xy]
+            y = [j for i,j in xy]
    
          ROOT.TGraph.__init__( self, len(x), array('f',x), array('f',y) )
       
@@ -118,6 +124,52 @@ class Graph( ROOT.TGraph ):
       r = ( ROOT.Double(), ROOT.Double(), ROOT.Double(), ROOT.Double() )
       self.ComputeRange( r[0], r[1], r[2], r[3] )
       return r
+
+   def scale( self, factor ):
+      for i in range( 0, self.GetN() ):
+         p = ( ROOT.Double(), ROOT.Double() )
+         self.GetPoint( i, p[0], p[1] )
+         self.SetPoint( i, p[0], p[1]*factor )
+
+   def add( self, term ):
+      for i in range( 0, self.GetN() ):
+         p = ( ROOT.Double(), ROOT.Double() )
+         self.GetPoint( i, p[0], p[1] )
+         self.SetPoint( i, p[0], p[1]+term )
+   
+   def integral( self ):
+      """ Calculate integral using trapezoidal rule. """
+      integral = 0.0
+      for i in range( 1, self.GetN() ):
+         previousPoint = ( ROOT.Double(), ROOT.Double() )
+         thisPoint = ( ROOT.Double(), ROOT.Double() )
+         self.GetPoint( i-1, previousPoint[0], previousPoint[1] )
+         self.GetPoint( i, thisPoint[0], thisPoint[1] )
+         
+         integral += (thisPoint[0]-previousPoint[0]) * (thisPoint[1]+previousPoint[1])/2.0
+      return integral
+      
+   def argminX( self ):
+      """ Get the minimum X. """
+      min = 1e30
+      minX = None
+      for i in range( 0, self.GetN() ):
+         p = ( ROOT.Double(), ROOT.Double() )
+         self.GetPoint( i, p[0], p[1] )
+         if p[1] < min:
+            min = p[1]
+            minX = p[0]
+      return minX
+      
+   def argminY( self ):
+      """ Get the minimum Y. """
+      min = 1e30
+      for i in range( 0, self.GetN() ):
+         p = ( ROOT.Double(), ROOT.Double() )
+         self.GetPoint( i, p[0], p[1] )
+         if p[1] < min: min = p[1]
+      return min
+      
 
    def table( self, bandLow=None, bandHigh=None, bandDifference=True ):
       out = ""
@@ -141,6 +193,7 @@ class Graph( ROOT.TGraph ):
       """ xRange must be of the form (min,max) when given """
       if xVar and not xRange: xRange = (xVar.getMin(), xVar.getMax())
       if xVar and not xCenter: xCenter = xVar.getVal()
+      if not xRange: xRange = (self.GetRanges()[0], self.GetRanges()[2])
       
       low,high = (None,None)
 
@@ -173,6 +226,7 @@ class Graph( ROOT.TGraph ):
       """ xRange must be of the form (min,max) when given """
       if xVar and not xRange: xRange = (xVar.getMin(), xVar.getMax())
       if xVar and not xCenter: xCenter = xVar.getVal()
+      if not xRange: xRange = (self.GetRanges()[0], self.GetRanges()[2])
       
       low,high = (None,None)
 
@@ -200,6 +254,15 @@ class Graph( ROOT.TGraph ):
          higher = newHigher
          
       return (low,high)
+      
+   def getLatexIntervalFromNll( self, minX, up=0.5, xRange=None, steps=1000, digits=2 ):
+      """ The parameter up is the same as in a Minos scan (0.5 for nll 
+      and 68% two sided intervals). """
+      
+      mInterval = self.getFirstIntersectionsWithValue( up, xCenter=minX, xRange=xRange, steps=steps )
+      fF = "%."+str(digits)+"f"   # float Format
+      return ( (fF+"^{+"+fF+"}_{"+fF+"}") % (minX,mInterval[1]-minX,mInterval[0]-minX) )
+      
       
 
 
@@ -255,6 +318,33 @@ def DrawLine( x1,y1,x2,y2, lineWidth=None, lineStyle=None, lineColor=None, NDC=F
       l.Draw()
    
    return l
+
+def DrawHLine( y, lineWidth=None, lineStyle=None, lineColor=None ):
+   ROOT.gPad.Update()
+   x1,y1,x2,y2 = ( ROOT.Double(),ROOT.Double(),ROOT.Double(),ROOT.Double() )
+   ROOT.gPad.GetRangeAxis( x1,y1, x2,y2 )
+   return DrawLine(
+      x1,y, x2,y,
+      lineWidth, lineStyle, lineColor,
+   )
+
+def DrawVLine( x, lineWidth=None, lineStyle=None, lineColor=None ):
+   ROOT.gPad.Update()
+   x1,y1,x2,y2 = ( ROOT.Double(),ROOT.Double(),ROOT.Double(),ROOT.Double() )
+   ROOT.gPad.GetRangeAxis( x1,y1, x2,y2 )
+   return DrawLine(
+      x,y1, x,y2,
+      lineWidth, lineStyle, lineColor,
+   )
+   
+def DrawBox( x1,y1, x2,y2, fillColor=None, lineColor=None, lineWidth=None, lineStyle=None ):
+   b = ROOT.TBox( x1,y1, x2,y2 )
+   if fillColor: b.SetFillColor( fillColor )
+   if lineColor: b.SetLineColor( lineColor )
+   if lineStyle: b.SetLineColor( lineStyle )
+   if lineWidth: b.SetLineColor( lineWidth )
+   b.Draw()
+   return b
 
 
 def DrawTextOneLine( x, y, text, textColor = 1, textSize = 0.04, NDC = True, halign = "left", valign = "bottom", skipLines = 0 ):
