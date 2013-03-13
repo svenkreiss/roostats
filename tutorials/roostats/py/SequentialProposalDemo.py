@@ -176,8 +176,8 @@ def main():
          h5.SetTitle( "Comparison of Posterior Contours (red) and NLL Contours (blue)" )
          h5.GetZaxis().SetTitle( "Posterior Contours (red) / NLL Contours (blue)" )
          cont.append( h5 )
-         cont68Marginalized = getContours( h5, plot.ContourLevel(h5,0.68), c3 )
-         cont95Marginalized = getContours( h5, plot.ContourLevel(h5,0.95), c3 )
+         cont68Marginalized = getContours( h5, ROOT.RooStats.ContourLevelHPD(h5,0.68), c3 )
+         cont95Marginalized = getContours( h5, ROOT.RooStats.ContourLevelHPD(h5,0.95), c3 )
          cont.append( cont68Marginalized+cont95Marginalized )
 
          for c in cont68Profile:
