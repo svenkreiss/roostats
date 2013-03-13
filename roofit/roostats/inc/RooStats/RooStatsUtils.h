@@ -128,7 +128,6 @@ namespace RooStats {
 
    TH1* ProfileMinOntoX( TH2& h2, bool subtractMin = false );
    TH1* ProfileMinOntoY( TH2& h2, bool subtractMin = false );
-   TGraph* ProfileMin2D( TH2& h2 );
 }
 
 

@@ -335,7 +335,4 @@ namespace RooStats {
    }
    
    
-   TGraph* ProfileMin2D( TH2& h2 ) {}
-
-
 }
