@@ -36,6 +36,9 @@ END_HTML
 #ifndef ROOSTATS_MCMCIntervalPlot
 #include "RooStats/MCMCIntervalPlot.h"
 #endif
+#ifndef ROOSTATS_RooStatsUtils
+#include "RooStats/RooStatsUtils.h"
+#endif
 #include <iostream>
 #ifndef ROOT_TROOT
 #include "TROOT.h"
@@ -955,33 +958,6 @@ TH2* MCMCIntervalPlot::GetMaxLikelihoodHist2D(RooRealVar& xVar, RooRealVar& yVar
    return (TH2*)MaxLFromNLLHist( h );
 }
 
-TH1* MCMCIntervalPlot::MaxLFromNLLHist( TH1* nllHist ) {
-   TString maxLName( "maxLHist2D_" );
-   maxLName += nllHist->GetName();
-   
-   TH1* maxLHist = (TH1*)nllHist->Clone( maxLName );
-   
-   maxLHist->SetTitle( "Maximum Likelihood per Bin (subtracted)" );
-   if( maxLHist->GetDimension() == 1 )
-      maxLHist->GetYaxis()->SetTitle( "Maximum Likelihood per Bin (subtracted)" );
-   else if( maxLHist->GetDimension() == 2 )
-      maxLHist->GetZaxis()->SetTitle( "Maximum Likelihood per Bin (subtracted)" );
-   else
-      cout << "WARNING: not sure what to do with this histogram." << endl;
-
-   int numBins = maxLHist->GetNbinsX()+2;
-   if( maxLHist->GetDimension() >= 2 ) numBins *= maxLHist->GetNbinsY()+2;
-   if( maxLHist->GetDimension() >= 3 ) numBins *= maxLHist->GetNbinsZ()+2;
-   double minNLL = maxLHist->GetMinimum();
-   for( int i=0; i < numBins; i++ ) {
-      double newVal = exp(- (maxLHist->GetBinContent(i)-minNLL));
-      //cout << "nll = " << h->GetBinContent(i) << "   L = " << newVal << endl;
-      maxLHist->SetBinContent( i, newVal );
-   }
-
-   return maxLHist;
-}
-
 
 
 
@@ -1155,126 +1131,6 @@ void MCMCIntervalPlot::DrawWeightHist(const Option_t* options)
 */
 
 
-double MCMCIntervalPlot::ContourLevel( TH1* h, double integralValue ) {
-   int numBins = h->GetNbinsX()+2;
-   if( h->GetNbinsY() > 1 ) numBins *= h->GetNbinsY()+2;
-   if( h->GetNbinsZ() > 1 ) numBins *= h->GetNbinsZ()+2;
-   
-   std::vector<double> bins;
-   for( int i=0; i < numBins; i++ ) bins.push_back( h->GetBinContent(i) ); 
-   std::sort( bins.begin(), bins.end(), std::greater<double>() );  // reverse sort using std::greater<>()
-
-   double integral = h->Integral();   
-   double cumulative = 0.0;
-   for( std::vector<double>::iterator b=bins.begin(); b != bins.end(); b++ ) {
-      cumulative += (*b)/integral;
-      if( cumulative >= integralValue ) return *b;
-   }
-   
-   return 0.0;
-}
-
-void MCMCIntervalPlot::HistMin( TH1* h1, TH1* h2 ) {
-   int numBins1 = h1->GetNbinsX()+2;
-   if( h1->GetNbinsY() > 1 ) numBins1 *= h1->GetNbinsY()+2;
-   if( h1->GetNbinsZ() > 1 ) numBins1 *= h1->GetNbinsZ()+2;
-   int numBins2 = h2->GetNbinsX()+2;
-   if( h2->GetNbinsY() > 1 ) numBins2 *= h2->GetNbinsY()+2;
-   if( h2->GetNbinsZ() > 1 ) numBins2 *= h2->GetNbinsZ()+2;
-   
-   if( numBins2 != numBins1 ) {
-      std::cout << "ERROR MCMCIntervalPlot::HistMin(): histograms need to have the same dimensions." << std::endl; 
-      return;
-   }
-   
-   // Assume maximum in each histogram corresponds to unset bins.
-   // Therefore, raise max to the max of both histograms.
-   if( h1->GetMaximum() > h2->GetMaximum() ) {
-      double h2OldMax = h2->GetMaximum();
-      for( int i=0; i < numBins2; i++ ) {
-         if( h2->GetBinContent(i) == h2OldMax ) h2->SetBinContent( i, h1->GetMaximum() );
-      }
-   }else{
-      double h1OldMax = h1->GetMaximum();
-      for( int i=0; i < numBins2; i++ ) {
-         if( h1->GetBinContent(i) == h1OldMax ) h1->SetBinContent( i, h2->GetMaximum() );
-      }
-   }
-   
-   for( int i=0; i < numBins1; i++ ) {
-      if( h2->GetBinContent(i) < h1->GetBinContent(i) ) {
-         h1->SetBinContent( i, h2->GetBinContent(i) );
-      }
-   }
-}
-
-TH1D* MCMCIntervalPlot::RebinHist1DMin( TH1* h, int rebin ) {
-   TH1D* hRebinned = new TH1D( 
-      h->GetName(), h->GetTitle(),
-      h->GetNbinsX()/rebin, h->GetXaxis()->GetXmin(), h->GetXaxis()->GetXmax()
-   );
-   
-   // nothing is smaller than min, so use min-1.0 as place holder for empty
-   double minOrig = h->GetMinimum();
-   for( int i=0; i < hRebinned->GetNbinsX()+2; i++ ) {
-      hRebinned->SetBinContent( i, minOrig-1.0 );
-   }
-
-   for( int x=0; x < h->GetNbinsX(); x++ ) {
-      //int xRebinned = floor(x/rebin);
-      int bin = x+1;
-      int binRebinned = hRebinned->FindBin( h->GetBinCenter(bin) ); //xRebinned+1;
-      if( h->GetBinContent(bin) < hRebinned->GetBinContent(binRebinned) ||
-          hRebinned->GetBinContent(binRebinned) == minOrig-1.0
-      ) {
-         hRebinned->SetBinContent( binRebinned, h->GetBinContent(bin) );
-      }
-   }
-
-   for( int i=0; i < hRebinned->GetNbinsX()+2; i++ ) {
-      if( hRebinned->GetBinContent(i) == minOrig-1.0 ) {
-         hRebinned->SetBinContent( i, hRebinned->GetMaximum() );
-      }
-   }
-
-   return hRebinned;   
-}
-
-TH2D* MCMCIntervalPlot::RebinHist2DMin( TH2* h, int rebin ) {
-   TH2D* hRebinned = new TH2D( 
-      TString(h->GetName())+"_rebinned", h->GetTitle(),
-      h->GetNbinsX()/rebin, h->GetXaxis()->GetXmin(), h->GetXaxis()->GetXmax(),
-      h->GetNbinsY()/rebin, h->GetYaxis()->GetXmin(), h->GetYaxis()->GetXmax()
-   );
-   
-   // nothing is smaller than min, so use min-1.0 as place holder for empty
-   double minOrig = h->GetMinimum();
-   for( int i=0; i < (hRebinned->GetNbinsX()+2)*(hRebinned->GetNbinsY()+2); i++ ) {
-      hRebinned->SetBinContent( i, minOrig-1.0 );
-   }
-
-   for( int x=0; x < h->GetNbinsX(); x++ ) {
-      for( int y=0; y < h->GetNbinsY(); y++ ) {
-         int xRebinned = x/rebin;
-         int yRebinned = y/rebin;
-         int bin = (y+1)*(h->GetNbinsY()+2) + (x+1);
-         int binRebinned = (yRebinned+1)*(hRebinned->GetNbinsY()+2) + (xRebinned+1);
-         if( h->GetBinContent(bin) < hRebinned->GetBinContent(binRebinned) ||
-             hRebinned->GetBinContent(binRebinned) == minOrig-1.0
-         ) {
-            hRebinned->SetBinContent( binRebinned, h->GetBinContent(bin) );
-         }
-      }
-   }
-
-   for( int i=0; i < (hRebinned->GetNbinsX()+2)*(hRebinned->GetNbinsY()+2); i++ ) {
-      if( hRebinned->GetBinContent(i) == minOrig-1.0 ) {
-         hRebinned->SetBinContent( i, hRebinned->GetMaximum() );
-      }
-   }
-
-   return hRebinned;   
-}
 
 
 

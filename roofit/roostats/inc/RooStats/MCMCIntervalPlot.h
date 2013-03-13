@@ -81,12 +81,6 @@ namespace RooStats {
       TH1* GetHist1D(RooRealVar& var);
       TH1* GetHist1DSlice(RooRealVar& var, RooRealVar& sliceVar, double sliceMin, double sliceMax);
       TH2* GetHist2D(RooRealVar& xVar, RooRealVar& yVar);
-
-      static double ContourLevel( TH1* h, double integralValue );      
-      static void HistMin( TH1* h1, TH1* h2 );
-      static TH1D* RebinHist1DMin( TH1* h, int rebin );
-      static TH2D* RebinHist2DMin( TH2* h, int rebin );
-      static TH1* MaxLFromNLLHist( TH1* nllHist );
       
 
    private:
