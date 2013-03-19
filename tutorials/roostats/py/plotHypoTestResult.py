@@ -5,11 +5,13 @@ __version__ = "0.1"
 
 
 
-import os,re,glob,optparse
+import os,re,optparse
 
 
-parser = optparse.OptionParser(usage="%prog", version="%prog 0.1")
-parser.add_option("-i", "--input", help="root file with impsampl", dest="input", default="ToysOutput.root" )
+parser = optparse.OptionParser(usage="%prog inputRootFiles [options]", version="%prog 0.1", description="""
+Plots the merged detailed outputs in the root files given as inputRootFiles.
+By default, all output is written to the directory ToysOutput/.
+""")
 parser.add_option("-w", "--workspace", help="workspace name", dest="workspace", default="ToysOutput" )
 parser.add_option("-r", "--hypoTestResult", help="hypoTestResult name", dest="hypoTestResult", default="HypoTestCalculator_result" )
 parser.add_option("-o", "--output", help="pdf file with impsampl output", dest="output", default="ToysOutput/" )
@@ -44,10 +46,9 @@ ROOT.gStyle.SetPalette(1)
 
 
 class HtrPlotMaker:
-   def __init__( self, filename, wName, htrName ):
-      files = glob.glob( filename )
+   def __init__( self, filenames, wName, htrName ):
       self.htr = None
-      for fName in files:
+      for fName in filenames:
          print( "Opening "+fName )
          f = ROOT.TFile.Open( fName )
          w = f.Get( wName )
@@ -72,6 +73,9 @@ class HtrPlotMaker:
 
       # look at full output
       fullResult = htr.GetNullDetailedOutput()
+      if not fullResult: 
+         print( "ERROR: Please rerun toys with detailed output enabled: --detailedOutput" )
+         return
       fullResult.Print("v")
    
       l = ROOT.RooArgList( fullResult.get() )
@@ -271,5 +275,5 @@ class HtrPlotMaker:
       
 
 if __name__ == "__main__":
-   p = HtrPlotMaker( options.input, options.workspace, options.hypoTestResult )
+   p = HtrPlotMaker( args, options.workspace, options.hypoTestResult )
    p.drawHtr()
