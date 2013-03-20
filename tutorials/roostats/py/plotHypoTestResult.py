@@ -36,13 +36,18 @@ os.system( "rm "+options.output+"*.eps" )
 
 
 import ROOT
-import AtlasStyle
-import AtlasUtil
+import helperStyle 
 
 ROOT.gROOT.SetBatch( True )
 ROOT.gStyle.SetPalette(1)
 
 
+def getNames( rooabscollection ):
+   c = ROOT.RooArgList( rooabscollection )
+   names = []
+   for i in range( c.getSize() ):
+      names.append( c.at(i).GetName() )
+   return names
 
 
 class HtrPlotMaker:
@@ -100,7 +105,7 @@ class HtrPlotMaker:
       fullResult.fillHistogram( hAll, ROOT.RooArgList(l.at(0),"tmpList") )
       normalization = hAll.Integral( "width" )
 
-      if "densityLabel" in fullResult.get():
+      if "densityLabel" in getNames( fullResult.get() ):
          densityLabels = fullResult.get()["densityLabel"]
          for i in range( -1, 100 ):
             if densityLabels.setIndex( i ): break
