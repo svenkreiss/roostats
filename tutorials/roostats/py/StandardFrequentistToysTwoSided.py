@@ -41,7 +41,7 @@ import math
 def main():
    ROOT.RooRandom.randomGenerator().SetSeed( 0 )
 
-   f = ROOT.TFile.Open( options.fileName )
+   f = ROOT.TFile.Open( options.input )
    w = f.Get( options.wsName )
    mc = w.obj( options.mcName )
    data = w.data( options.dataName )
@@ -50,7 +50,6 @@ def main():
    
 
    poiL = ROOT.RooArgList( mc.GetParametersOfInterest() )
-
 
    # ----------------------------------------------------
    # Configure a ProfileLikelihoodTestStat to use with ToyMCSampler
