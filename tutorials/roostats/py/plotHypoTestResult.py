@@ -20,9 +20,9 @@ parser.add_option(      "--fits", help="an output for minos.py", dest="fits", de
 
 parser.add_option(      "--ymin", help="p value low y range", type="float", dest="ymin", default=5e-8)
 parser.add_option(      "--ymax", help="p value max y range", type="float", dest="ymax", default=50)
-parser.add_option(      "--xmin", help="xmin", type="float", dest="xmin", default=-1.5)
+parser.add_option(      "--xmin", help="xmin", type="float", dest="xmin", default=-6.5)
 parser.add_option(      "--xmax", help="xmax", type="float", dest="xmax", default=13.5)
-parser.add_option(      "--bins", help="bins for sampling distribution plots", type="int", dest="bins", default=60)
+parser.add_option(      "--bins", help="bins for sampling distribution plots", type="int", dest="bins", default=80)
 parser.add_option(      "--dof", help="Specify degrees-of-freedom for asym distributions.", type="int", dest="dof", default=1)
 parser.add_option(      "--twoSided", help="If the test is two sided. Default is one sided.", dest="twoSided", default=False, action="store_true")
 parser.add_option("-q", "--quiet", action="store_false", dest="verbose", default=True,

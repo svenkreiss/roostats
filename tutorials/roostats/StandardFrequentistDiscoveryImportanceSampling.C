@@ -71,7 +71,6 @@ ToyMCImportanceSampler* configureToyMCImportanceSampler(ModelConfig* mc, RooAbsD
    // or not:
    toymcs->SetEqualNumToysPerDensity();
 
-
    // ----------------------------------------------------
    // get muhat
    RooArgSet* allParams = mc->GetPdf()->getParameters(*data);
@@ -108,7 +107,7 @@ double StandardFrequentistDiscoveryImportanceSampling(
    const char* ofile = "ImpSamplOutput.root",
    int impPoints = 1,
    bool adaptiveNumImpPoints = false,
-   int toys = 1200,
+   int toys = 10000,
    double poiValueForBackground = 0.0,
    double poiValueForSignal = 1.0
 ) {
@@ -187,6 +186,7 @@ double StandardFrequentistDiscoveryImportanceSampling(
 
 
    RooRealVar* firstPOI = (RooRealVar*) mc->GetParametersOfInterest()->first();
+   firstPOI->setRange( -10,10 );
    // set snapshot for alt
    firstPOI->setVal(poiValueForSignal);
    mc->SetSnapshot(*mc->GetParametersOfInterest());
@@ -205,11 +205,6 @@ double StandardFrequentistDiscoveryImportanceSampling(
    plts->SetSigned(true);
    plts->SetVarName( "q_{0}/2" );
    plts->EnableDetailedOutput( true );
-//   plts->SetPrintLevel(10);
-//   ProfileLikelihoodTestStatEnhanced* plts =  new ProfileLikelihoodTestStatEnhanced(*mc->GetPdf());
-//   plts->SetOneSidedDiscovery(true);
-//   plts->SetVarName( "q_{0}/2" );
-//   //plts->SetPrintLevel(10);
 
    SimpleLikelihoodRatioTestStat* slrts = new SimpleLikelihoodRatioTestStat(*mc->GetPdf(),*mc->GetPdf());
    slrts->EnableDetailedOutput( true );
