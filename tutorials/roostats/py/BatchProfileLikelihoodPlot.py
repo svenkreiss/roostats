@@ -218,7 +218,7 @@ def main():
          nllTGraph.SetLineColor( ROOT.kRed )
          nllTGraph.Draw("SAME")
       canvas.cd(2)
-      canvas.SaveAs( "docImages/batchProfileLikelihood1D.png" )
+      canvas.SaveAs( "doc/images/batchProfileLikelihood1D.png" )
       canvas.Update()
       raw_input( "Press enter to continue ..." )
    
