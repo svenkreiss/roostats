@@ -110,7 +110,7 @@ def visualizeEnumeration( poiL ):
    jobs.Draw("COL")
    jobsMask.Draw("BOX,SAME")
    jobs.Draw("TEXT,SAME")
-   canvas.SaveAs( "docImages/binEnumeration2D.png" )
+   canvas.SaveAs( "doc/images/binEnumeration2D.png" )
    canvas.Update()
    raw_input( "Press enter to continue ..." )
 
@@ -186,7 +186,6 @@ def preFit( w, mc, nll ):
 
 
 
-
 def main():
    ROOT.RooRandom.randomGenerator().SetSeed( 0 )
 
@@ -194,8 +193,8 @@ def main():
    w = f.Get( options.wsName )
    mc = w.obj( options.mcName )
    data = w.data( options.dataName )
-
-   helperModifyModelConfig.apply( options, w, mc )
+   
+   helperModifyModelConfig.apply( options, f,w,mc,data )
 
    firstPOI = mc.GetParametersOfInterest().first()
    poiL = ROOT.RooArgList( mc.GetParametersOfInterest() )
@@ -207,7 +206,6 @@ def main():
 
    ##### Script starts here
    
-
    ROOT.RooAbsReal.defaultIntegratorConfig().method1D().setLabel("RooAdaptiveGaussKronrodIntegrator1D")
 
    ROOT.Math.MinimizerOptions.SetDefaultMinimizer("Minuit2","Minimize")

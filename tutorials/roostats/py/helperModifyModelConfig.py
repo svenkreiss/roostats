@@ -15,6 +15,9 @@ def addOptionsToOptParse( parser ):
    parser.add_option(      "--overwritePOI", help="Force to take comma separated list of parameters with value for poi. Example: \"mu=1,mH=125\" will make these two the poi.", dest="overwritePOI", default=False )
    parser.add_option(      "--overwriteRange", help="Overwrite range. Example: \"mu=[-5:10],mH=[120:130]\".", dest="overwriteRange", default=False )
    parser.add_option(      "--overwriteBins", help="Overwrite bins. Example: \"mu=5,mH=100\".", dest="overwriteBins", default=False )
+   
+   # for plugins
+   parser.add_option(      "--plugins", help="comma separated list of plugins", dest="plugins", default=None )
 
 
 
@@ -31,8 +34,28 @@ def varsDictFromString( str ):
    return vars
 
 
-def apply( options, w, mc ):
+def callHooksPreprocess( options, f,w,mc,data ):
+   if not options.plugins: return
+   
+   print( "" )
+
+   for pName in options.plugins.split(","):
+      try:
+         plugin = __import__( pName )
+         if hasattr(plugin,"preprocess"):
+            print( '--- Plugin "'+pName+'": preprocess() ---' )
+            plugin.preprocess( f,w,mc,data )
+      except ImportError:
+         print( "ERROR: Did not find plugin: "+str(pName) )
+
+   print( "" )
+
+
+
+def apply( options, f,w,mc,data ):
    """ Todo: use varsDictFromString() here. """
+
+   callHooksPreprocess( options, f,w,mc,data )
 
    if options.overwriteRange:
       parAndRange = options.overwriteRange.split(",")
