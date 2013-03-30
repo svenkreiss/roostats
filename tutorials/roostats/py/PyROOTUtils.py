@@ -125,17 +125,17 @@ class Graph( ROOT.TGraph ):
       self.ComputeRange( r[0], r[1], r[2], r[3] )
       return r
 
-   def scale( self, factor ):
+   def transformY( self, function ):
       for i in range( 0, self.GetN() ):
          p = ( ROOT.Double(), ROOT.Double() )
          self.GetPoint( i, p[0], p[1] )
-         self.SetPoint( i, p[0], p[1]*factor )
+         self.SetPoint( i, p[0], function(p[1]) )
+
+   def scale( self, factor ):
+      self.transformY( lambda y: y*factor )
 
    def add( self, term ):
-      for i in range( 0, self.GetN() ):
-         p = ( ROOT.Double(), ROOT.Double() )
-         self.GetPoint( i, p[0], p[1] )
-         self.SetPoint( i, p[0], p[1]+term )
+      self.transformY( lambda y: y+term )
    
    def integral( self ):
       """ Calculate integral using trapezoidal rule. """
@@ -148,6 +148,7 @@ class Graph( ROOT.TGraph ):
          
          integral += (thisPoint[0]-previousPoint[0]) * (thisPoint[1]+previousPoint[1])/2.0
       return integral
+      
       
    def argminX( self ):
       """ Get the minimum X. """

@@ -217,7 +217,12 @@ def main():
          nllTGraph.SetLineWidth( 2 )
          nllTGraph.SetLineColor( ROOT.kRed )
          nllTGraph.Draw("SAME")
-      canvas.cd(2)
+
+         canvas.cd(2)
+         lGraph = PyROOTUtils.Graph( nllTGraph )
+         lGraph.SetTitle( "Likelihood" )
+         lGraph.transformY( lambda y: math.exp(-y) )
+         lGraph.Draw("AXIS L")
       canvas.SaveAs( "doc/images/batchProfileLikelihood1D.png" )
       canvas.Update()
       raw_input( "Press enter to continue ..." )
