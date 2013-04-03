@@ -104,7 +104,7 @@ double StandardFrequentistDiscoveryImportanceSampling(
    const char* workspaceName = "channel1",
    const char* modelConfigNameSB = "ModelConfig",
    const char* dataName = "obsData",
-   const char* ofile = "ImpSamplOutput.root",
+   const char* ofile = "ToysOutput.root",
    int impPoints = 1,
    bool adaptiveNumImpPoints = false,
    int toys = 10000,

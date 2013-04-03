@@ -1,4 +1,4 @@
-// @(#)root/roostats:$Id: SamplingDistPlot.cxx 45646 2012-08-17 09:10:26Z moneta $
+// @(#)root/roostats:$Id: SamplingDistPlot.cxx 49058 2013-04-02 08:58:09Z moneta $
 // Authors: Sven Kreiss    June 2010
 // Authors: Kyle Cranmer, Lorenzo Moneta, Gregory Schott, Wouter Verkerke
 /*************************************************************************
@@ -105,7 +105,6 @@ Double_t SamplingDistPlot::AddSamplingDistribution(const SamplingDistribution *s
    TString options(drawOptions);
    options.ToUpper();
 
-
    Double_t xmin(TMath::Infinity()), xmax(-TMath::Infinity()); 
    // remove cases where xmin and xmax are +/- inf
    for( unsigned int i=0; i < fSamplingDistr.size(); i++ ) {
@@ -121,6 +120,7 @@ Double_t SamplingDistPlot::AddSamplingDistribution(const SamplingDistribution *s
       xmin = -1.0;
       xmax = 1.0;
    }
+
    
    // add 1.5 bins left and right
    assert(fBins > 1);
