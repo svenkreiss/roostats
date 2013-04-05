@@ -220,12 +220,12 @@ def main():
       data, 
       ROOT.RooFit.CloneData(ROOT.kFALSE), 
       ROOT.RooFit.Constrain(params), 
-      #ROOT.RooFit.Offset(True),
+      ROOT.RooFit.Offset(True),
    )
    nll.setEvalErrorLoggingMode(ROOT.RooAbsReal.CountErrors)
    #nll.enableOffsetting( True )
-   #print( "Get NLL once. This first call sets the offset, so it is important that this happens when the parameters are at their initial values." )
-   #print( "nll = "+str( nll.getVal() ) )
+   print( "Get NLL once. This first call sets the offset, so it is important that this happens when the parameters are at their initial values." )
+   print( "nll = "+str( nll.getVal() ) )
 
 
       
