@@ -30,6 +30,7 @@ parser.add_option("-f", "--fullRun", help="Do a full run.", dest="fullRun", defa
 parser.add_option(      "--unconditionalFitInSeparateJob", help="Do the unconditional fit in a separate job", dest="unconditionalFitInSeparateJob", default=False, action="store_true")
 parser.add_option(      "--initVars", help="Set these vars to these values before every fit (to work-around minuit getting stuck in local minima). It takes comma separated inputs of the form var=4.0 or var=4.0+/-1.0 .", dest="initVars", default=None )
 parser.add_option(      "--printAllNuisanceParameters", help="Prints all nuisance parameters.", dest="printAllNuisanceParameters", default=False, action="store_true")
+parser.add_option(      "--skipOnInvalidNll", help="As the parameter name says.", dest="skipOnInvalidNll", default=False, action="store_true")
 
 parser.add_option("-q", "--quiet", dest="verbose", action="store_false", default=True, help="Quiet output.")
 options,args = parser.parse_args()
@@ -223,7 +224,6 @@ def main():
       ROOT.RooFit.Offset(True),
    )
    nll.setEvalErrorLoggingMode(ROOT.RooAbsReal.CountErrors)
-   #nll.enableOffsetting( True )
    print( "Get NLL once. This first call sets the offset, so it is important that this happens when the parameters are at their initial values." )
    print( "nll = "+str( nll.getVal() ) )
 
@@ -275,7 +275,11 @@ def main():
       print( "--- next point: "+str(i)+" ---" )
       print( "Parameters Of Interest: "+str([ poiL.at(p).getVal() for p in range(poiL.getSize()) ]) )
       preFit( w, mc, nll )
-      minimize( nll )
+      nllVal = nll.getVal()
+      if options.skipOnInvalidNll and (nllVal > 1e30  or  nllVal != nllVal):
+         print( "WARNING: nll value invalid. Skipping minimization was requested." )
+      else:
+         minimize( nll )
       
       # build result line
       result = "nll="+str(nll.getVal())+", "
