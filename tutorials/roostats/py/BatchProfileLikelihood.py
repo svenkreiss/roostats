@@ -190,6 +190,10 @@ def preFit( w, mc, nll ):
 
 
 def main():
+   if options.verbose:
+      print( "Given options: " )
+      print( options )
+
    ROOT.RooRandom.randomGenerator().SetSeed( 0 )
 
    f = ROOT.TFile.Open( options.input )
@@ -268,6 +272,8 @@ def main():
       preFit( w, mc, nll )
       minimize( nll )
       print( "ucmles -- nll="+str(nll.getVal())+", "+", ".join( [poiL.at(p).GetName()+"="+str(poiL.at(p).getVal()) for p in range(poiL.getSize())] ) )
+      
+      helperModifyModelConfig.callHooks( options, f,w,mc,data, type="postUnconditionalFit" )
 
    # conditional fits
    for p in range( poiL.getSize() ): poiL.at(p).setConstant()
@@ -292,6 +298,8 @@ def main():
          result += ", "
          result += ", ".join( [nuisL.at(p).GetName()+"="+str(nuisL.at(p).getVal()) for p in range(nuisL.getSize())] )
       print( result )
+      
+   print( "\nDone." )
       
 
 

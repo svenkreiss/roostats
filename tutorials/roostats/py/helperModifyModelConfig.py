@@ -34,7 +34,7 @@ def varsDictFromString( str ):
    return vars
 
 
-def callHooksPreprocess( options, f,w,mc,data ):
+def callHooks( options, f,w,mc,data, type ):
    if not options.plugins: return
    
    print( "" )
@@ -42,9 +42,11 @@ def callHooksPreprocess( options, f,w,mc,data ):
    for pName in options.plugins.split(","):
       try:
          plugin = __import__( pName )
-         if hasattr(plugin,"preprocess"):
-            print( '--- Plugin "'+pName+'": preprocess() ---' )
-            plugin.preprocess( f,w,mc,data )
+         if hasattr( plugin,type ):
+            print( '--- Plugin "'+pName+'": '+type+'() ---' )
+            getattr( plugin,type )( f,w,mc,data )
+         else:
+            print( '--- Plugin "'+pName+'" does not contain '+type+'() ---' )
       except ImportError:
          print( "ERROR: Did not find plugin: "+str(pName) )
 
@@ -55,7 +57,7 @@ def callHooksPreprocess( options, f,w,mc,data ):
 def apply( options, f,w,mc,data ):
    """ Todo: use varsDictFromString() here. """
 
-   callHooksPreprocess( options, f,w,mc,data )
+   callHooks( options, f,w,mc,data, type="preprocess" )
 
    if options.overwriteRange:
       parAndRange = options.overwriteRange.split(",")

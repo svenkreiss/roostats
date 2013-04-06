@@ -8,6 +8,7 @@ __version__ = "0.1"
 
 
 def preprocess( f,w,mc,data ):
+   """ This is an example. """
    
    print( "This is the example plugin inside the preprocess() function." )
    print( "The name of the pdf in the ModelConfig is: "+str( mc.GetPdf().GetName() ) )
