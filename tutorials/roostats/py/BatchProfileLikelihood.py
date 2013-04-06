@@ -31,6 +31,8 @@ parser.add_option(      "--unconditionalFitInSeparateJob", help="Do the uncondit
 parser.add_option(      "--initVars", help="Set these vars to these values before every fit (to work-around minuit getting stuck in local minima). It takes comma separated inputs of the form var=4.0 or var=4.0+/-1.0 .", dest="initVars", default=None )
 parser.add_option(      "--printAllNuisanceParameters", help="Prints all nuisance parameters.", dest="printAllNuisanceParameters", default=False, action="store_true")
 parser.add_option(      "--skipOnInvalidNll", help="As the parameter name says.", dest="skipOnInvalidNll", default=False, action="store_true")
+parser.add_option(      "--minStrategy", help="Minuit Strategies: 0 fastest, 1 intermediate, 2 slow", dest="minStrategy", default=1, type=int)
+parser.add_option(      "--minOptimizeConst", help="NLL optimize const", dest="minOptimizeConst", default=2, type=int)
 
 parser.add_option("-q", "--quiet", dest="verbose", action="store_false", default=True, help="Quiet output.")
 options,args = parser.parse_args()
@@ -134,7 +136,7 @@ def minimize( nll ):
    else:
       minim.setPrintLevel(1)
    minim.setStrategy(strat)
-   minim.optimizeConst(0)
+   minim.optimizeConst(options.minOptimizeConst)
 
    # Got to be very careful with SCAN. We have to allow for negative mu,
    # so large part of the space that is scanned produces log-eval errors.
@@ -210,7 +212,7 @@ def main():
    ROOT.RooAbsReal.defaultIntegratorConfig().method1D().setLabel("RooAdaptiveGaussKronrodIntegrator1D")
 
    ROOT.Math.MinimizerOptions.SetDefaultMinimizer("Minuit2","Minimize")
-   ROOT.Math.MinimizerOptions.SetDefaultStrategy(1)
+   ROOT.Math.MinimizerOptions.SetDefaultStrategy(options.minStrategy)
    #ROOT.Math.MinimizerOptions.SetDefaultPrintLevel(1)
    ROOT.Math.MinimizerOptions.SetDefaultPrintLevel(-1)
    #ROOT.Math.MinimizerOptions.SetDefaultTolerance(0.0001)
