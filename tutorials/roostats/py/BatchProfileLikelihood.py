@@ -47,6 +47,7 @@ import helperStyle
 import PyROOTUtils
 import math
 from array import array
+import time
 
 
 def setParameterToBin( par, binNumber ):
@@ -193,6 +194,7 @@ def main():
    if options.verbose:
       print( "Given options: " )
       print( options )
+   timeStart = time.time()
 
    ROOT.RooRandom.randomGenerator().SetSeed( 0 )
 
@@ -299,7 +301,7 @@ def main():
          result += ", ".join( [nuisL.at(p).GetName()+"="+str(nuisL.at(p).getVal()) for p in range(nuisL.getSize())] )
       print( result )
       
-   print( "\nDone." )
+   print( "\nDone. Time=%.1fs." % (time.time()-timeStart) )
       
 
 
