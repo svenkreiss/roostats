@@ -33,6 +33,7 @@ parser.add_option(      "--printAllNuisanceParameters", help="Prints all nuisanc
 parser.add_option(      "--skipOnInvalidNll", help="As the parameter name says.", dest="skipOnInvalidNll", default=False, action="store_true")
 parser.add_option(      "--minStrategy", help="Minuit Strategies: 0 fastest, 1 intermediate, 2 slow", dest="minStrategy", default=1, type=int)
 parser.add_option(      "--minOptimizeConst", help="NLL optimize const", dest="minOptimizeConst", default=2, type=int)
+parser.add_option(      "--enableOffset", help="enable likelihood offsetting", dest="enableOffset", default=False, action="store_true")
 
 parser.add_option("-q", "--quiet", dest="verbose", action="store_false", default=True, help="Quiet output.")
 options,args = parser.parse_args()
@@ -229,11 +230,12 @@ def main():
       data, 
       ROOT.RooFit.CloneData(ROOT.kFALSE), 
       ROOT.RooFit.Constrain(params), 
-      ROOT.RooFit.Offset(True),
+      ROOT.RooFit.Offset(options.enableOffset),
    )
    nll.setEvalErrorLoggingMode(ROOT.RooAbsReal.CountErrors)
-   print( "Get NLL once. This first call sets the offset, so it is important that this happens when the parameters are at their initial values." )
-   print( "nll = "+str( nll.getVal() ) )
+   if options.enableOffset:
+      print( "Get NLL once. This first call sets the offset, so it is important that this happens when the parameters are at their initial values." )
+      print( "nll = "+str( nll.getVal() ) )
 
 
       
