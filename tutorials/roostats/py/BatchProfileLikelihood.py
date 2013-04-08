@@ -232,6 +232,12 @@ def main():
       ROOT.RooFit.Constrain(params), 
       ROOT.RooFit.Offset(options.enableOffset),
    )
+   nllNoOffset = mc.GetPdf().createNLL(
+      data, 
+      ROOT.RooFit.CloneData(ROOT.kFALSE), 
+      ROOT.RooFit.Constrain(params), 
+      ROOT.RooFit.Offset(False),
+   )
    nll.setEvalErrorLoggingMode(ROOT.RooAbsReal.CountErrors)
    if options.enableOffset:
       print( "Get NLL once. This first call sets the offset, so it is important that this happens when the parameters are at their initial values." )
@@ -275,7 +281,7 @@ def main():
       print( "--- unconditional fit ---" )
       preFit( w, mc, nll )
       minimize( nll )
-      print( "ucmles -- nll="+str(nll.getVal())+", "+", ".join( [poiL.at(p).GetName()+"="+str(poiL.at(p).getVal()) for p in range(poiL.getSize())] ) )
+      print( "ucmles -- nll="+str(nllNoOffset.getVal())+", "+", ".join( [poiL.at(p).GetName()+"="+str(poiL.at(p).getVal()) for p in range(poiL.getSize())] ) )
       
       helperModifyModelConfig.callHooks( options, f,w,mc,data, type="postUnconditionalFit" )
 
@@ -287,14 +293,14 @@ def main():
       print( "--- next point: "+str(i)+" ---" )
       print( "Parameters Of Interest: "+str([ poiL.at(p).getVal() for p in range(poiL.getSize()) ]) )
       preFit( w, mc, nll )
-      nllVal = nll.getVal()
+      nllVal = nllNoOffset.getVal()
       if options.skipOnInvalidNll and (nllVal > 1e30  or  nllVal != nllVal):
          print( "WARNING: nll value invalid. Skipping minimization was requested." )
       else:
          minimize( nll )
       
       # build result line
-      result = "nll="+str(nll.getVal())+", "
+      result = "nll="+str(nllNoOffset.getVal())+", "
       # poi values
       result += ", ".join( [poiL.at(p).GetName()+"="+str(poiL.at(p).getVal()) for p in range(poiL.getSize())] )
       # nuisance parameter values if requested
