@@ -59,12 +59,14 @@ def setParameterToBin( par, binNumber, reverse = False ):
    else:
       par.setVal( par.getMax() -  (float(binNumber)+0.5)/par.getBins()*( par.getMax()-par.getMin() ) )
    
-def parametersNCube( parL, i, reversedParameters = [], reorderParameters = [] ):
-   pars = range(parL.getSize())
-   if len(reorderParameters) == len(pars):
-      pars = [ reorderParameters[p] for p in pars ]
-      
-   for d in reversed( pars ):
+def parametersNCube( parLIn, i, reversedParameters = [], reorderParameters = [] ):
+   if parLIn.getSize() == len(reorderParameters):
+      parL = ROOT.RooArgList( "reorderedParList" )
+      for j in range( parLIn.getSize() ): parL.add( parLIn.at(reorderParameters[j]) )
+   else:
+      parL = ROOT.RooArgList( parLIn, "reorderedParList" )
+   
+   for d in reversed( range(parL.getSize()) ):
       if d >= 1:
          lowerDim = reduce( lambda x,y: x*y, [parL.at(dd).getBins() for dd in range(d)] )
          #print( "Par %s: lowerDim=%d, i=%d, i%%lowerDim=%d" % (parL.at(d).GetName(), lowerDim, i, i%lowerDim) )
