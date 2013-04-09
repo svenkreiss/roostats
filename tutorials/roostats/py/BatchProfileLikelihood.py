@@ -33,7 +33,7 @@ parser.add_option(      "--printAllNuisanceParameters", help="Prints all nuisanc
 parser.add_option(      "--skipOnInvalidNll", help="As the parameter name says.", dest="skipOnInvalidNll", default=False, action="store_true")
 parser.add_option(      "--minStrategy", help="Minuit Strategies: 0 fastest, 1 intermediate, 2 slow", dest="minStrategy", default=1, type=int)
 parser.add_option(      "--minOptimizeConst", help="NLL optimize const", dest="minOptimizeConst", default=2, type=int)
-parser.add_option(      "--reversedParameters", help="Execution order reversed. Give index of POIs like 0,2.", dest="reversed", default="", type=string)
+parser.add_option(      "--reversedParameters", help="Execution order reversed. Give index of POIs like 0,2.", dest="reversed", default="")
 parser.add_option(      "--enableOffset", help="enable likelihood offsetting", dest="enableOffset", default=False, action="store_true")
 
 parser.add_option("-q", "--quiet", dest="verbose", action="store_false", default=True, help="Quiet output.")
