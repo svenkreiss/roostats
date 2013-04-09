@@ -226,6 +226,9 @@ def main():
 
 
    ##### Script starts here
+
+   if not options.verbose:
+      ROOT.RooMsgService.instance().setGlobalKillBelow(ROOT.RooFit.FATAL)
    
    ROOT.RooAbsReal.defaultIntegratorConfig().method1D().setLabel("RooAdaptiveGaussKronrodIntegrator1D")
 
