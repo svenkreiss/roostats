@@ -249,7 +249,7 @@ def main():
                
    
    
-      
+   print( "Writing file: "+options.outputFile )
    f = ROOT.TFile( options.outputFile, "RECREATE" )
    nllHist.Write()
    for p,g in nllTGraphs.iteritems():

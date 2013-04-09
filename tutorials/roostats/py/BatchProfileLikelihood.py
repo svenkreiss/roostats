@@ -33,6 +33,7 @@ parser.add_option(      "--printAllNuisanceParameters", help="Prints all nuisanc
 parser.add_option(      "--skipOnInvalidNll", help="As the parameter name says.", dest="skipOnInvalidNll", default=False, action="store_true")
 parser.add_option(      "--minStrategy", help="Minuit Strategies: 0 fastest, 1 intermediate, 2 slow", dest="minStrategy", default=1, type=int)
 parser.add_option(      "--minOptimizeConst", help="NLL optimize const", dest="minOptimizeConst", default=2, type=int)
+parser.add_option(      "--reorderParameters", help="Execution order: swap x and y to scan in vertical stripes instead of horizontal. Give index of POIs like 1,0.", dest="reorderParameters", default="")
 parser.add_option(      "--reversedParameters", help="Execution order reversed. Give index of POIs like 0,2.", dest="reversedParameters", default="")
 parser.add_option(      "--enableOffset", help="enable likelihood offsetting", dest="enableOffset", default=False, action="store_true")
 
@@ -58,8 +59,12 @@ def setParameterToBin( par, binNumber, reverse = False ):
    else:
       par.setVal( par.getMax() -  (float(binNumber)+0.5)/par.getBins()*( par.getMax()-par.getMin() ) )
    
-def parametersNCube( parL, i, reversedParameters = [] ):
-   for d in reversed( range(parL.getSize()) ):
+def parametersNCube( parL, i, reversedParameters = [], reorderParameters = [] ):
+   pars = range(parL.getSize())
+   if len(reorderParameters) == len(pars):
+      pars = [ reorderParameters[p] for p in pars ]
+      
+   for d in reversed( pars ):
       if d >= 1:
          lowerDim = reduce( lambda x,y: x*y, [parL.at(dd).getBins() for dd in range(d)] )
          #print( "Par %s: lowerDim=%d, i=%d, i%%lowerDim=%d" % (parL.at(d).GetName(), lowerDim, i, i%lowerDim) )
@@ -97,13 +102,13 @@ def visualizeEnumeration( poiL ):
 
    numPoints = reduce( lambda x,y: x*y, [poiL.at(d).getBins() for d in range(poiL.getSize())] )
    for i in range( poiL.at(0).getBins()*poiL.at(1).getBins() ):
-      parametersNCube( poiL, i, [ int(j) for j in options.reversedParameters.split(",") ] )
+      parametersNCube( poiL, i, [ int(j) for j in options.reversedParameters.split(",") ], [ int(j) for j in options.reorderParameters.split(",") ] )
       numbers.SetBinContent( numbers.FindBin( poiL.at(0).getVal(), poiL.at(1).getVal() ), i )
       jobs.SetBinContent( jobs.FindBin( poiL.at(0).getVal(), poiL.at(1).getVal() ), int(float(i)/numPoints*options.jobs) )
 
    firstPoint,lastPoint = jobBins( numPoints )
    for i in range( firstPoint,lastPoint ):
-      parametersNCube( poiL, i, [ int(j) for j in options.reversedParameters.split(",") ] )
+      parametersNCube( poiL, i, [ int(j) for j in options.reversedParameters.split(",") ], [ int(j) for j in options.reorderParameters.split(",") ] )
       jobsMask.SetBinContent(
          jobsMask.FindBin( poiL.at(0).getVal(), poiL.at(1).getVal() ),
          1000
@@ -134,7 +139,7 @@ def minimize( nll ):
 
    msglevel = ROOT.RooMsgService.instance().globalKillBelow()
    if not options.verbose:
-      ROOT.RooMsgService.instance().setGlobalKillBelow(ROOT.RooFit.ERROR)
+      ROOT.RooMsgService.instance().setGlobalKillBelow(ROOT.RooFit.FATAL)
 
    minim = ROOT.RooMinimizer( nll )
    if not options.verbose:
@@ -303,7 +308,7 @@ def main():
    # conditional fits
    for p in range( poiL.getSize() ): poiL.at(p).setConstant()
    for i in range( firstPoint,lastPoint ):
-      parametersNCube( poiL, i, [ int(j) for j in options.reversedParameters.split(",") ] )
+      parametersNCube( poiL, i, [ int(j) for j in options.reversedParameters.split(",") ], [ int(j) for j in options.reorderParameters.split(",") ] )
       print( "" )
       print( "--- next point: "+str(i)+" ---" )
       print( "Parameters Of Interest: "+str([ poiL.at(p).getVal() for p in range(poiL.getSize()) ]) )
