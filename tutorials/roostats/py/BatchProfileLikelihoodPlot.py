@@ -101,7 +101,7 @@ def main():
    print( POIs )
 
    print( "\n--- Best fit ---" )
-   print( bestFit )
+   print( [ (name,value) for name,value in bestFit.iteritems() if name in [p[0] for p in POIs] or name == 'nll' ] )
 
    print( "\n--- NLL ---" )
    maxNLL = max( [n for n in NLL['nll'] if n < 1e10] )
@@ -231,17 +231,20 @@ def main():
             if xyNeg: nuisParGraphs[ poi[0]+"_vs_"+nuis[0]+"_thresholdNeg_"+str(t) ] = PyROOTUtils.Graph( xyNeg )
             
          # make a histogram
-         nllHist = ROOT.TH2D( 
+         nllHistNuisPoi = ROOT.TH2D( 
             "nuisPar_"+poi[0]+"_vs_"+nuis[0]+"_nllHist", 
             "profiled NLL;"+poi[0]+";"+nuis[0]+";NLL",
             int(poi[1][0]), poi[1][1], poi[1][2],
             int(nuis[1][0]), min(yA), max(yA),
          )
          for x,y,n in zip( NLL[ poi[0] ], NLL[ nuis[0] ], NLL[ 'nll' ] ):
-            b = nllHist.FindBin( x,y )
-            if nllHist.GetBinContent( b ) == 0.0  or  nllHist.GetBinContent( b ) > n-minNLL:
-               nllHist.SetBinContent( b,n-minNLL )
-         nuisParGraphs[ poi[0]+"_vs_"+nuis[0]+"_nllHist" ] = nllHist
+            b = nllHistNuisPoi.FindBin( x,y )
+            if nllHistNuisPoi.GetBinContent( b ) == 0.0  or  nllHistNuisPoi.GetBinContent( b ) > n-minNLL:
+               nllHistNuisPoi.SetBinContent( b,n-minNLL )
+         nuisParGraphs[ poi[0]+"_vs_"+nuis[0]+"_nllHist" ] = nllHistNuisPoi
+         
+         # add best fit marker in this plane
+         nuisParGraphs[ poi[0]+"_vs_"+nuis[0]+"_bestFit" ] = ROOT.TMarker( bestFit[ poi[0] ], bestFit[ nuis[0] ], 2 )
          
                
    

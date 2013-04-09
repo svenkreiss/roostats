@@ -239,6 +239,7 @@ def main():
       ROOT.RooFit.Offset(False),
    )
    nll.setEvalErrorLoggingMode(ROOT.RooAbsReal.CountErrors)
+   nllNoOffset.setEvalErrorLoggingMode(ROOT.RooAbsReal.CountErrors)
    if options.enableOffset:
       print( "Get NLL once. This first call sets the offset, so it is important that this happens when the parameters are at their initial values." )
       print( "nll = "+str( nll.getVal() ) )
