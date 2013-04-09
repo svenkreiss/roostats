@@ -114,6 +114,15 @@ def main():
       if NLL['nll'][i] > maxNLL: NLL['nll'][i] = maxNLL
    print( "(minNLL,maxNLL) = (%f,%f)" % (minNLL,maxNLL) )
 
+
+   bestFitMarker = None
+   if len( POIs ) == 1  and  POIs[0][0] in bestFit:
+      bestFitMarker = ROOT.TMarker( bestFit[ POIs[0][0] ], 0.0, 2 )
+   elif len( POIs ) >= 2  and  POIs[0][0] in bestFit  and  POIs[1][0] in bestFit:
+      bestFitMarker = ROOT.TMarker( bestFit[ POIs[0][0] ], bestFit[ POIs[1][0] ], 2 )
+      
+
+
    nllHist = None
    maxHist = maxNLL
    if options.subtractMinNLL: maxHist -= minNLL
@@ -177,29 +186,73 @@ def main():
    nllTGraphs = {}
    nuisParGraphs = {}
    for poi in POIs:
-      pn = [ (p,n) for p,n in zip(NLL[poi[0]], NLL['nll']) if n < minNLL+100.0 ]
-      nllTGraph = PyROOTUtils.Graph( pn )
+      xDict = {}
+      for x,n in zip( NLL[poi[0]], NLL['nll'] ):
+         if x in xDict: xDict[x].append( n )
+         else:          xDict[x] = [ n ]
+      # profile in unseen poi directions
+      nllTGraph = PyROOTUtils.Graph( [(x,min(y)) for x,y in xDict.iteritems()] )
       if options.subtractMinNLL: nllTGraph.add( -minNLL )
       nllTGraphs[poi[0]] = nllTGraph
+      
 
       for nuis in NUISs:
-         g = PyROOTUtils.Graph( NLL[poi[0]], NLL[nuis[0]] )
-         nuisParGraphs[poi[0]+"_vs_"+nuis[0]] = g
+         xA = NLL[ poi[0] ]
+         yA = NLL[ nuis[0] ]
+         nllA = NLL[ 'nll' ]
+         
+         xDict = {}
+         for x,y,n in zip(xA,yA,nllA):
+            if x in xDict: xDict[x].append( (n,y) )
+            else:          xDict[x] = [ (n,y) ]
+
+         # profile in unseen poi directions
+         xAMin = [ x          for x,ny in xDict.iteritems() ]
+         yAMin = [ min(ny)[1] for x,ny in xDict.iteritems() ]
+         nuisParGraphs[ poi[0]+"_vs_"+nuis[0] ] = PyROOTUtils.Graph( xAMin, yAMin )
+
+         # var values at contours:
+         thresholds = [2.3/2.0, 6.0/2.0]  # 2d: 68% and 95%
+         for t in thresholds:
+            xyPos = []
+            xyNeg = []
+            for x,ny,ymin in zip( xDict.keys(),xDict.values(),yAMin ):
+               # skip if the smallest nll is not below the threshold
+               if min(ny)[0] > minNLL+t: continue
+            
+               # build a list of y values larger than ymin and find the value closest to the threshold
+               nySlice = [ (math.fabs(n-minNLL-t),y) for n,y in ny if y > ymin ]
+               if nySlice: xyPos.append( (x,min(nySlice)[1]) )
+               # build a list of y values less than ymin and find the value closest to the threshold
+               nySlice = [ (math.fabs(n-minNLL-t),y) for n,y in ny if y < ymin ]
+               if nySlice: xyNeg.append( (x,min(nySlice)[1]) )
+               
+            if xyPos: nuisParGraphs[ poi[0]+"_vs_"+nuis[0]+"_thresholdPos_"+str(t) ] = PyROOTUtils.Graph( xyPos )
+            if xyNeg: nuisParGraphs[ poi[0]+"_vs_"+nuis[0]+"_thresholdNeg_"+str(t) ] = PyROOTUtils.Graph( xyNeg )
+            
+         # make a histogram
+         nllHist = ROOT.TH2D( 
+            "nuisPar_"+poi[0]+"_vs_"+nuis[0]+"_nllHist", 
+            "profiled NLL;"+poi[0]+";"+nuis[0]+";NLL",
+            int(poi[1][0]), poi[1][1], poi[1][2],
+            int(nuis[1][0]), min(yA), max(yA),
+         )
+         for x,y,n in zip( NLL[ poi[0] ], NLL[ nuis[0] ], NLL[ 'nll' ] ):
+            b = nllHist.FindBin( x,y )
+            if nllHist.GetBinContent( b ) == 0.0  or  nllHist.GetBinContent( b ) > n-minNLL:
+               nllHist.SetBinContent( b,n-minNLL )
+         nuisParGraphs[ poi[0]+"_vs_"+nuis[0]+"_nllHist" ] = nllHist
+         
+               
    
    
-   bestFitMarker = None
-   if len( POIs ) == 1  and  POIs[0][0] in bestFit:
-      bestFitMarker = ROOT.TMarker( bestFit[ POIs[0][0] ], 0.0, 2 )
-   elif len( POIs ) >= 2  and  POIs[0][0] in bestFit  and  POIs[1][0] in bestFit:
-      bestFitMarker = ROOT.TMarker( bestFit[ POIs[0][0] ], bestFit[ POIs[1][0] ], 2 )
-      
       
    f = ROOT.TFile( options.outputFile, "RECREATE" )
    nllHist.Write()
    for p,g in nllTGraphs.iteritems():
       if g: g.Write( "nll_"+p )
    for p,g in nuisParGraphs.iteritems():
-      if g: g.Write( "nuisParGraph_"+p )
+      if g: g.Write( "nuisPar_"+p )
    for h in histos2d.values():
       h.Write()
    if bestFitMarker: bestFitMarker.Write("bestFit")

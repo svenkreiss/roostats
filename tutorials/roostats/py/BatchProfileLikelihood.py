@@ -281,7 +281,17 @@ def main():
       print( "--- unconditional fit ---" )
       preFit( w, mc, nll )
       minimize( nll )
-      print( "ucmles -- nll="+str(nllNoOffset.getVal())+", "+", ".join( [poiL.at(p).GetName()+"="+str(poiL.at(p).getVal()) for p in range(poiL.getSize())] ) )
+
+      # build result line
+      result = "ucmles -- nll="+str(nllNoOffset.getVal())+", "
+      # poi values
+      result += ", ".join( [poiL.at(p).GetName()+"="+str(poiL.at(p).getVal()) for p in range(poiL.getSize())] )
+      # nuisance parameter values if requested
+      if options.printAllNuisanceParameters:
+         result += ", "
+         result += ", ".join( [nuisL.at(p).GetName()+"="+str(nuisL.at(p).getVal()) for p in range(nuisL.getSize())] )
+      print( result )
+
       
       helperModifyModelConfig.callHooks( options, f,w,mc,data, type="postUnconditionalFit" )
 
