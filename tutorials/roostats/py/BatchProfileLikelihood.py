@@ -33,8 +33,8 @@ parser.add_option(      "--printAllNuisanceParameters", help="Prints all nuisanc
 parser.add_option(      "--skipOnInvalidNll", help="As the parameter name says.", dest="skipOnInvalidNll", default=False, action="store_true")
 parser.add_option(      "--minStrategy", help="Minuit Strategies: 0 fastest, 1 intermediate, 2 slow", dest="minStrategy", default=1, type=int)
 parser.add_option(      "--minOptimizeConst", help="NLL optimize const", dest="minOptimizeConst", default=2, type=int)
-parser.add_option(      "--reorderParameters", help="Execution order: swap x and y to scan in vertical stripes instead of horizontal. Give index of POIs like 1,0.", dest="reorderParameters", default="")
-parser.add_option(      "--reversedParameters", help="Execution order reversed. Give index of POIs like 0,2.", dest="reversedParameters", default="")
+parser.add_option(      "--reorderParameters", help="Execution order: swap x and y to scan in vertical stripes instead of horizontal. Give index of POIs like 1,0.", dest="reorderParameters", default=False)
+parser.add_option(      "--reversedParameters", help="Execution order reversed. Give index of POIs like 0,2.", dest="reversedParameters", default=False)
 parser.add_option(      "--enableOffset", help="enable likelihood offsetting", dest="enableOffset", default=False, action="store_true")
 
 parser.add_option("-q", "--quiet", dest="verbose", action="store_false", default=True, help="Quiet output.")
@@ -42,6 +42,13 @@ options,args = parser.parse_args()
 
 # to calculate unconditionalFitInSeparateJob, reduce options.jobs by one to make room for the extra job
 if options.unconditionalFitInSeparateJob: options.jobs -= 1
+
+if options.reversedParameters: options.reversedParameters = [ int(j) for j in options.reversedParameters.split(",") ]
+else:                          options.reversedParameters = []
+
+if options.reorderParameters: options.reorderParameters = [ int(j) for j in options.reorderParameters.split(",") ]
+else:                         options.reorderParameters = []
+
 
 
 import ROOT
@@ -104,13 +111,13 @@ def visualizeEnumeration( poiL ):
 
    numPoints = reduce( lambda x,y: x*y, [poiL.at(d).getBins() for d in range(poiL.getSize())] )
    for i in range( poiL.at(0).getBins()*poiL.at(1).getBins() ):
-      parametersNCube( poiL, i, [ int(j) for j in options.reversedParameters.split(",") ], [ int(j) for j in options.reorderParameters.split(",") ] )
+      parametersNCube( poiL, i, options.reversedParameters, options.reorderParameters )
       numbers.SetBinContent( numbers.FindBin( poiL.at(0).getVal(), poiL.at(1).getVal() ), i )
       jobs.SetBinContent( jobs.FindBin( poiL.at(0).getVal(), poiL.at(1).getVal() ), int(float(i)/numPoints*options.jobs) )
 
    firstPoint,lastPoint = jobBins( numPoints )
    for i in range( firstPoint,lastPoint ):
-      parametersNCube( poiL, i, [ int(j) for j in options.reversedParameters.split(",") ], [ int(j) for j in options.reorderParameters.split(",") ] )
+      parametersNCube( poiL, i, options.reversedParameters, options.reorderParameters )
       jobsMask.SetBinContent(
          jobsMask.FindBin( poiL.at(0).getVal(), poiL.at(1).getVal() ),
          1000
@@ -313,7 +320,7 @@ def main():
    # conditional fits
    for p in range( poiL.getSize() ): poiL.at(p).setConstant()
    for i in range( firstPoint,lastPoint ):
-      parametersNCube( poiL, i, [ int(j) for j in options.reversedParameters.split(",") ], [ int(j) for j in options.reorderParameters.split(",") ] )
+      parametersNCube( poiL, i, options.reversedParameters, options.reorderParameters )
       print( "" )
       print( "--- next point: "+str(i)+" ---" )
       print( "Parameters Of Interest: "+str([ poiL.at(p).getVal() for p in range(poiL.getSize()) ]) )
