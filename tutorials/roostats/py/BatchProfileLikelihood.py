@@ -215,7 +215,7 @@ def main():
    mc = w.obj( options.mcName )
    data = w.data( options.dataName )
    
-   helperModifyModelConfig.apply( options, f,w,mc,data )
+   f,w,mc,data = helperModifyModelConfig.apply( options, f,w,mc,data )
 
    firstPOI = mc.GetParametersOfInterest().first()
    poiL = ROOT.RooArgList( mc.GetParametersOfInterest() )
@@ -307,8 +307,8 @@ def main():
          result += ", ".join( [nuisL.at(p).GetName()+"="+str(nuisL.at(p).getVal()) for p in range(nuisL.getSize())] )
       print( result )
 
-      
-      helperModifyModelConfig.callHooks( options, f,w,mc,data, type="postUnconditionalFit" )
+      f,w,mc,data = helperModifyModelConfig.callHooks( options, f,w,mc,data, type="postUnconditionalFit" )
+
 
    # conditional fits
    for p in range( poiL.getSize() ): poiL.at(p).setConstant()
