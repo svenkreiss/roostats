@@ -14,7 +14,6 @@ parser = optparse.OptionParser(version="0.1")
 parser.add_option("-i", "--inputFiles", help="glob expression for log files from BatchProfileLikelihood.py", type="string", dest="inputFiles", default="batchProfile.log")
 parser.add_option("-o", "--outputFile", help="output root file", type="string", dest="outputFile", default="PL_data.root")
 parser.add_option(      "--subtractMinNLL", help="subtracts the minNLL", dest="subtractMinNLL", default=False, action="store_true")
-#parser.add_option(      "--
 parser.add_option("-q", "--quiet", dest="verbose", action="store_false", default=True, help="Quiet output.")
 (options, args) = parser.parse_args()
 
@@ -25,6 +24,19 @@ import os, math
 import glob, re
 from array import array
 
+
+
+def getContours( hist, level, levelName, canvas ):
+   hist.SetContour( 1, array('d',[level]) )
+   hist.Draw( "CONT LIST" )
+   canvas.Update()
+   listOfGraphs = ROOT.gROOT.GetListOfSpecials().FindObject("contours").At(0)
+   contours = [ ROOT.TGraph( listOfGraphs.At(i) ) for i in range( listOfGraphs.GetSize() ) ]
+   for co in range( len(contours) ):
+      contours[co].SetLineWidth( 2 )
+      contours[co].SetLineColor( ROOT.kBlue )
+      contours[co].SetName( "Contour%s_%d" % (levelName,co) )
+   return contours
 
 
 
@@ -124,6 +136,7 @@ def main():
 
 
    nllHist = None
+   tgs = []
    maxHist = maxNLL
    if options.subtractMinNLL: maxHist -= minNLL
    if len( POIs ) == 1:
@@ -157,6 +170,11 @@ def main():
          val = nll
          if options.subtractMinNLL: val -= minNLL
          if nllHist.GetBinContent( bin ) > val: nllHist.SetBinContent( bin, val )
+         
+      # in 2D, also create 68% and 95% contours
+      c = ROOT.TCanvas()
+      tgs += getContours( nllHist, 1.15, "68TG", c )
+      tgs += getContours( nllHist, 3.0,  "95TG", c )
       
    if not nllHist:
       print( "ERROR: Couldn't create nll histogram." )
@@ -198,53 +216,66 @@ def main():
 
       for nuis in NUISs:
          xA = NLL[ poi[0] ]
+         if poi[0] != POIs[0][0]: xOtherA = NLL[ POIs[0][0] ]
+         elif len( POIs ) > 1:    xOtherA = NLL[ POIs[1][0] ]
+         else:                    xOtherA = NLL[ POIs[0][0] ]  # just a place holder
          yA = NLL[ nuis[0] ]
          nllA = NLL[ 'nll' ]
          
          xDict = {}
-         for x,y,n in zip(xA,yA,nllA):
-            if x in xDict: xDict[x].append( (n,y) )
-            else:          xDict[x] = [ (n,y) ]
+         for x,xOther,y,n in zip(xA,xOtherA,yA,nllA):
+            if x in xDict: xDict[x].append( (n,y,xOther) )
+            else:          xDict[x] = [ (n,y,xOther) ]
 
-         # profile in unseen poi directions
-         xAMin = [ x          for x,ny in xDict.iteritems() ]
-         yAMin = [ min(ny)[1] for x,ny in xDict.iteritems() ]
+         xAMin      = [ x          for x,ny in xDict.iteritems() ]
+         yAMin      = [ min(ny)[1] for x,ny in xDict.iteritems() ]
          nuisParGraphs[ poi[0]+"_vs_"+nuis[0] ] = PyROOTUtils.Graph( xAMin, yAMin )
 
-         # var values at contours:
-         thresholds = [2.3/2.0, 6.0/2.0]  # 2d: 68% and 95%
-         for t in thresholds:
-            xyPos = []
-            xyNeg = []
-            for x,ny,ymin in zip( xDict.keys(),xDict.values(),yAMin ):
-               # skip if the smallest nll is not below the threshold
-               if min(ny)[0] > minNLL+t: continue
+         if len( POIs ) > 1:
+            # profile in unseen poi directions
+            #    Create an xOther to distinguish whether this point is in the
+            #    +1sigma or -1sigma contour. In cases where y is not convex,
+            #    this will still create a correct line when the likelihood is
+            #    convex in the POI space.
+            #    Ie lines where the 2sigma line dips below the 1sigma line and
+            #    even crosses it are correct and using this are also drawn correctly.
+            xOtherAMin = [ min(ny)[2] for x,ny in xDict.iteritems() ]
+
+            # var values at contours:
+            thresholds = [2.3/2.0, 6.0/2.0]  # 2d: 68% and 95%
+            for t in thresholds:
+               xyPos = []
+               xyNeg = []
+               for x,ny,xOtherMin in zip( xDict.keys(),xDict.values(),xOtherAMin ):
+                  # skip if the smallest nll is not below the threshold
+                  if min(ny)[0] > minNLL+t: continue
             
-               # build a list of y values larger than ymin and find the value closest to the threshold
-               nySlice = [ (math.fabs(n-minNLL-t),y) for n,y in ny if y > ymin ]
-               if nySlice: xyPos.append( (x,min(nySlice)[1]) )
-               # build a list of y values less than ymin and find the value closest to the threshold
-               nySlice = [ (math.fabs(n-minNLL-t),y) for n,y in ny if y < ymin ]
-               if nySlice: xyNeg.append( (x,min(nySlice)[1]) )
+                  # build a list of y values larger than ymin and find the value closest to the threshold
+                  nySlice = [ (math.fabs(n-minNLL-t),y) for n,y,xOther in ny if xOther > xOtherMin ]
+                  if nySlice: xyPos.append( (x,min(nySlice)[1]) )
+                  # build a list of y values less than ymin and find the value closest to the threshold
+                  nySlice = [ (math.fabs(n-minNLL-t),y) for n,y,xOther in ny if xOther < xOtherMin ]
+                  if nySlice: xyNeg.append( (x,min(nySlice)[1]) )
                
-            if xyPos: nuisParGraphs[ poi[0]+"_vs_"+nuis[0]+"_thresholdPos_"+str(t) ] = PyROOTUtils.Graph( xyPos )
-            if xyNeg: nuisParGraphs[ poi[0]+"_vs_"+nuis[0]+"_thresholdNeg_"+str(t) ] = PyROOTUtils.Graph( xyNeg )
+               if xyPos: nuisParGraphs[ poi[0]+"_vs_"+nuis[0]+"_thresholdPos_"+str(t) ] = PyROOTUtils.Graph( xyPos )
+               if xyNeg: nuisParGraphs[ poi[0]+"_vs_"+nuis[0]+"_thresholdNeg_"+str(t) ] = PyROOTUtils.Graph( xyNeg )
             
-         # make a histogram
-         nllHistNuisPoi = ROOT.TH2D( 
-            "nuisPar_"+poi[0]+"_vs_"+nuis[0]+"_nllHist", 
-            "profiled NLL;"+poi[0]+";"+nuis[0]+";NLL",
-            int(poi[1][0]), poi[1][1], poi[1][2],
-            int(nuis[1][0]), min(yA), max(yA),
-         )
-         for x,y,n in zip( NLL[ poi[0] ], NLL[ nuis[0] ], NLL[ 'nll' ] ):
-            b = nllHistNuisPoi.FindBin( x,y )
-            if nllHistNuisPoi.GetBinContent( b ) == 0.0  or  nllHistNuisPoi.GetBinContent( b ) > n-minNLL:
-               nllHistNuisPoi.SetBinContent( b,n-minNLL )
-         nuisParGraphs[ poi[0]+"_vs_"+nuis[0]+"_nllHist" ] = nllHistNuisPoi
+            # make a histogram
+            nllHistNuisPoi = ROOT.TH2D( 
+               "nuisPar_"+poi[0]+"_vs_"+nuis[0]+"_nllHist", 
+               "profiled NLL;"+poi[0]+";"+nuis[0]+";NLL",
+               int(poi[1][0]), poi[1][1], poi[1][2],
+               int(nuis[1][0]), min(yA), max(yA),
+            )
+            for x,y,n in zip( NLL[ poi[0] ], NLL[ nuis[0] ], NLL[ 'nll' ] ):
+               b = nllHistNuisPoi.FindBin( x,y )
+               if nllHistNuisPoi.GetBinContent( b ) == 0.0  or  nllHistNuisPoi.GetBinContent( b ) > n-minNLL:
+                  nllHistNuisPoi.SetBinContent( b,n-minNLL )
+            nuisParGraphs[ poi[0]+"_vs_"+nuis[0]+"_nllHist" ] = nllHistNuisPoi
          
-         # add best fit marker in this plane
-         nuisParGraphs[ poi[0]+"_vs_"+nuis[0]+"_bestFit" ] = ROOT.TMarker( bestFit[ poi[0] ], bestFit[ nuis[0] ], 2 )
+            # add best fit marker in this plane
+            if poi[0] in bestFit and nuis[0] in bestFit:
+               nuisParGraphs[ poi[0]+"_vs_"+nuis[0]+"_bestFit" ] = ROOT.TMarker( bestFit[ poi[0] ], bestFit[ nuis[0] ], 2 )
          
                
    
@@ -258,6 +289,8 @@ def main():
       if g: g.Write( "nuisPar_"+p )
    for h in histos2d.values():
       h.Write()
+   for tg in tgs:
+      tg.Write()
    if bestFitMarker: bestFitMarker.Write("bestFit")
    f.Close()
    
