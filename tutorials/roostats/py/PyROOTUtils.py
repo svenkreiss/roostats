@@ -75,7 +75,7 @@ class Legend( ROOT.TLegend ):
 
 
 class Graph( ROOT.TGraph ):
-   def __init__( self, x, y=None, fillColor=None, lineColor=None, lineStyle=None, lineWidth=None, sort=True ):
+   def __init__( self, x, y=None, fillColor=None, lineColor=None, lineStyle=None, lineWidth=None, sort=True, name=None, title=None, nameTitle=None ):
       """ takes inputs of the form:
              x = [ (x1,y1), (x2,y2), ... ]
              y = None (default)
@@ -109,7 +109,10 @@ class Graph( ROOT.TGraph ):
             y = [j for i,j in xy]
    
          ROOT.TGraph.__init__( self, len(x), array('f',x), array('f',y) )
-      
+         
+      if nameTitle: self.SetNameTitle( nameTitle, nameTitle )
+      if name: self.SetName( name )
+      if title: self.SetTitle( title )
       
       if fillColor:
          self.SetFillColor( fillColor )
@@ -256,9 +259,11 @@ class Graph( ROOT.TGraph ):
          
       return (low,high)
       
-   def getLatexIntervalFromNll( self, minX, up=0.5, xRange=None, steps=1000, digits=2 ):
+   def getLatexIntervalFromNll( self, minX=None, up=0.5, xRange=None, steps=1000, digits=2 ):
       """ The parameter up is the same as in a Minos scan (0.5 for nll 
       and 68% two sided intervals). """
+      
+      if not minX: minX = self.argminX()
       
       mInterval = self.getFirstIntersectionsWithValue( up, xCenter=minX, xRange=xRange, steps=steps )
       fF = "%."+str(digits)+"f"   # float Format
