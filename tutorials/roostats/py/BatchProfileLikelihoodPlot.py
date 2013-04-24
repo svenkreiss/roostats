@@ -72,8 +72,6 @@ def getInputFromLogs( files ):
                NLL[ nuisName ] = []
                
          if l[:4] == "nll=":
-#             parAndValue = [(r.split("=")[0],float(r.split("=")[1])) for r in l.split(", ")]
-#             for p,v in parAndValue: NLL[p].append(v)
             pars = {}
             parAndValues = l.split(", ")
             for pv in parAndValues:
@@ -89,18 +87,25 @@ def getInputFromLogs( files ):
                   NLL[ p ].append( v )
             else:
                print( "WARNING: Did not find all parameters. Not adding values. line: "+l )
+
          if l[:14] == "ucmles -- nll=":
-            parAndValue = [(r.split("=")[0],float(r.split("=")[1])) for r in l.split(", ")]
-            for p,v in parAndValue:
-               if p == "ucmles -- nll": p = "nll"
-               bestFit[p] = v
-#             parAndValues = l.split(", ")
-#             for pv in parAndValues:
-#                regm = regexParValue.match( pv )
-#                if regm: 
-#                   par = regm.groupdict()['par']
-#                   if par == "ucmles -- nll": par = "nll"
-#                   NLL[ par ].append(  float(regm.groupdict()['value'])   )
+            pars = {}
+            parAndValues = l.split(", ")
+            for pv in parAndValues:
+               regm = regexParValue.match( pv )
+               if regm:
+                  try:
+                     pars[ regm.groupdict()['par'] ] = float(regm.groupdict()['value'])
+                  except ValueError:
+                     print( "WARNING could not convert value to float." )
+            
+            if len( pars.keys() ) == len( POIs )+len( NUISs ):
+               for p,v in pars.iteritems():
+                  if p == "ucmles -- nll": p = "nll"
+                  bestFit[ p ] = v
+            else:
+               print( "WARNING: Did not find all parameters. Not adding values. line: "+l )
+
       f.close()
       
    return (POIs,NUISs,NLL,bestFit)
@@ -229,7 +234,7 @@ def main():
 
          xAMin      = [ x          for x,ny in xDict.iteritems() ]
          yAMin      = [ min(ny)[1] for x,ny in xDict.iteritems() ]
-         nuisParGraphs[ poi[0]+"_vs_"+nuis[0] ] = PyROOTUtils.Graph( xAMin, yAMin )
+         nuisParGraphs[ poi[0]+"_vs_"+nuis[0] ] = PyROOTUtils.Graph( xAMin, yAMin, nameTitle="nuisPar_"+poi[0]+"_vs_"+nuis[0] )
 
          if len( POIs ) > 1:
             # profile in unseen poi directions
