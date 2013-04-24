@@ -35,7 +35,7 @@ def varsDictFromString( str ):
 
 
 def callHooks( options, f,w,mc,data, type ):
-   if not options.plugins: return
+   if not options.plugins: return (f,w,mc,data)
    
    print( "" )
 
@@ -93,7 +93,7 @@ def apply( options, f,w,mc,data ):
       for p in range( poiL.getSize() ):
          name = poiL.at(p).GetName()
          if name not in poiAndValue.keys():
-            print( "Adding "+name+"["+str(poiL.at(p).getMin())+","+str(poiL.at(p).getMax())+"] to nuisance parameters." )
+            print( "Adding "+name+"["+str(poiL.at(p).getMin())+","+str(poiL.at(p).getMax())+"]="+str(poiL.at(p).getVal())+{True:' C', False:''}[poiL.at(p).isConstant()]+" to nuisance parameters." )
             w.set( mc.GetName()+"_NuisParams" ).add( poiL.at(p) )
             remove.append( name )
 #          else:
@@ -127,7 +127,7 @@ def apply( options, f,w,mc,data ):
          print( "Loading snapshot "+s+" ..." )
          w.loadSnapshot( s )
          print( "done." )
-      
+               
    return (f,w,mc,data)
       
 
