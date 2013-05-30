@@ -84,7 +84,7 @@ def apply( options, f,w,mc,data ):
    if options.setConstant:
       parAndValue = options.setConstant.split(",")
       for pv in parAndValue:
-         name,value = pv.split(",")
+         name,value = pv.split("=")
          if w.var(name):
             w.var(name).setVal( float(value) )
             w.var(name).setConstant()
@@ -95,7 +95,7 @@ def apply( options, f,w,mc,data ):
    if options.setFloating:
       parAndValue = options.setFloating.split(",")
       for pv in parAndValue:
-         name,value = pv.split(",")
+         name,value = pv.split("=")
          if w.var(name):
             w.var(name).setVal( float(value) )
             w.var(name).setConstant(False)
