@@ -12,6 +12,8 @@ def addOptionsToOptParse( parser ):
    parser.add_option(      "--loadSnapshots", help="loads this comma separated list of snapshots", dest="loadSnapshots", default=None )
 
    # for modifications
+   parser.add_option(      "--setConstant", help="Set comma separated list of parameters to constant. Example: \"mu=1,mH=125\".", dest="setConstant", default=False )   
+   parser.add_option(      "--setFloating", help="Set comma separated list of parameters to floating. Example: \"mu=1,mH=125\".", dest="setFloating", default=False )   
    parser.add_option(      "--overwritePOI", help="Force to take comma separated list of parameters with value for poi. Example: \"mu=1,mH=125\" will make these two the poi.", dest="overwritePOI", default=False )
    parser.add_option(      "--overwriteRange", help="Overwrite range. Example: \"mu=[-5:10],mH=[120:130]\".", dest="overwriteRange", default=False )
    parser.add_option(      "--overwriteBins", help="Overwrite bins. Example: \"mu=5,mH=100\".", dest="overwriteBins", default=False )
@@ -78,6 +80,28 @@ def apply( options, f,w,mc,data ):
          p,b = pb.split("=")
          print( "Setting number of bins for "+p+"="+str(b) )
          w.var( p ).setBins( int(b) )
+
+   if options.setConstant:
+      parAndValue = options.setConstant.split(",")
+      for pv in parAndValue:
+         name,value = pv.split(",")
+         if w.var(name):
+            w.var(name).setVal( float(value) )
+            w.var(name).setConstant()
+            print( "Variable "+name+" set constant at value "+str(value)+"." )
+         else:
+            print( "Variable "+name+" not found and not set constant." )
+
+   if options.setFloating:
+      parAndValue = options.setFloating.split(",")
+      for pv in parAndValue:
+         name,value = pv.split(",")
+         if w.var(name):
+            w.var(name).setVal( float(value) )
+            w.var(name).setConstant(False)
+            print( "Variable "+name+" set floating with initial value "+str(value)+"." )
+         else:
+            print( "Variable "+name+" not found and not set floating." )
 
    if options.overwritePOI:
       print( "" )
