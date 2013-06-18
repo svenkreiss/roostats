@@ -75,7 +75,7 @@ class Legend( ROOT.TLegend ):
 
 
 class Graph( ROOT.TGraph ):
-   def __init__( self, x, y=None, fillColor=None, lineColor=None, lineStyle=None, lineWidth=None, sort=True, name=None, title=None, nameTitle=None ):
+   def __init__( self, x, y=None, fillColor=None, lineColor=None, lineStyle=None, lineWidth=None, markerSize=None, markerColor=None, markerStyle=None, sort=True, name=None, title=None, nameTitle=None ):
       """ takes inputs of the form:
              x = [ (x1,y1), (x2,y2), ... ]
              y = None (default)
@@ -107,6 +107,9 @@ class Graph( ROOT.TGraph ):
             xy = sorted( zip(x,y) )
             x = [i for i,j in xy]
             y = [j for i,j in xy]
+            
+         if len(x) < 1:
+            print( "WARNING: trying to create a TGraph without points." )
    
          ROOT.TGraph.__init__( self, len(x), array('f',x), array('f',y) )
          
@@ -122,11 +125,37 @@ class Graph( ROOT.TGraph ):
          self.SetLineStyle( lineStyle )
       if lineWidth:
          self.SetLineWidth( lineWidth )
+      if markerColor:
+         self.SetMarkerColor( markerColor )
+      if markerStyle:
+         self.SetMarkerStyle( markerStyle )
+      if markerSize:
+         self.SetMarkerSize( markerSize )
          
    def GetRanges( self ):
       r = ( ROOT.Double(), ROOT.Double(), ROOT.Double(), ROOT.Double() )
       self.ComputeRange( r[0], r[1], r[2], r[3] )
       return r
+
+   def eval( self, x ):
+      import math
+      xyBefore = (-10000,0)
+      xyAfter = (10000,0)
+      for i in range( 0, self.GetN() ):
+         p = ( ROOT.Double(), ROOT.Double() )
+         self.GetPoint( i, p[0], p[1] )
+         if x < p[0]  and  math.fabs(x-xyBefore[0]) > math.fabs(x-p[0]):
+            xyBefore = (p[0],p[1])
+         if x > p[0]  and  math.fabs(x-xyAfter[0]) > math.fabs(x-p[0]):
+            xyAfter = (p[0],p[1])
+
+      return xyBefore[1]  +   (xyAfter[1]-xyBefore[1])/(xyAfter[0]-xyBefore[0])   *(x-xyBefore[0])
+
+   def transformX( self, function ):
+      for i in range( 0, self.GetN() ):
+         p = ( ROOT.Double(), ROOT.Double() )
+         self.GetPoint( i, p[0], p[1] )
+         self.SetPoint( i, function(p[0]), p[1] )
 
    def transformY( self, function ):
       for i in range( 0, self.GetN() ):
@@ -231,6 +260,7 @@ class Graph( ROOT.TGraph ):
       if xVar and not xRange: xRange = (xVar.getMin(), xVar.getMax())
       if xVar and not xCenter: xCenter = xVar.getVal()
       if not xRange: xRange = (self.GetRanges()[0], self.GetRanges()[2])
+      if not xCenter: xCenter = self.argminX()
       
       low,high = (None,None)
 
@@ -262,14 +292,17 @@ class Graph( ROOT.TGraph ):
    def getLatexIntervalFromNll( self, minX=None, up=0.5, xRange=None, steps=1000, digits=2 ):
       """ The parameter up is the same as in a Minos scan (0.5 for nll 
       and 68% two sided intervals). """
-      
+
       if not minX: minX = self.argminX()
-      
+            
       mInterval = self.getFirstIntersectionsWithValue( up, xCenter=minX, xRange=xRange, steps=steps )
       fF = "%."+str(digits)+"f"   # float Format
       return ( (fF+"^{+"+fF+"}_{"+fF+"}") % (minX,mInterval[1]-minX,mInterval[0]-minX) )
       
-      
+class Marker( ROOT.TMarker ):
+   def __init__( self, x,y, markerColor=None, markerStyle=5 ):
+      ROOT.TMarker.__init__( self, x,y, markerStyle )
+      if markerColor: self.SetMarkerColor( markerColor )
 
 
 class Band( ROOT.TGraph ):
