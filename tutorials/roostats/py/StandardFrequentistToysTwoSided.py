@@ -55,6 +55,7 @@ def main():
    # Configure a ProfileLikelihoodTestStat to use with ToyMCSampler
    plts = ROOT.RooStats.ProfileLikelihoodTestStat( mc.GetPdf() )
    #plts.SetOneSidedDiscovery( True )
+   plts.SetLOffset()
    plts.SetVarName( "q_{"  +  ",".join([poiL.at(p).GetName()+"="+str(poiL.at(p).getVal()) for p in range( poiL.getSize() )])  +  "}/2" )
    if options.detailedOutput: plts.EnableDetailedOutput( True )
    
